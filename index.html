@@ -55,10 +55,17 @@
         result.innerHTML = "⚠️ 请输入一个有效的数字！";
         return;
       }
-      if (weight <= 110) {
-        result.innerHTML = "🎉 恭喜，今晚应该可以找婕吃饭了！^_^";
-      } else {
+      if (weight = 110) {
+        result.innerHTML = "🎉 哇塞！你猜到婕的平均体重了😲";
+      }
+      if (weight < 110)  {
+        result.innerHTML = "🎉 恭喜，今晚可以约婕一起吃饭啦^_^";
+      }
+      if (weight > 110 < 130)  {
         result.innerHTML = "完蛋了，婕又要减肥了>_<!!!";
+      }
+       else {
+        result.innerHTML = 别捣乱！";
       }
     }
   </script>
