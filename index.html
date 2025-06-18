@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>婕的体重判断器</title>
+  <title>婕的心情判断器</title>
   <style>
     body {
       font-family: 'Arial', sans-serif;
@@ -40,8 +40,8 @@
   </style>
 </head>
 <body>
-  <h1>婕今天的体重判断器</h1>
-  <p>婕今天的体重是（单位: 斤）:</p>
+  <h1>婕今天的心情如何呢</h1>
+  <p>请输入婕今天的体重（单位: 斤）:</p>
   <input type="number" id="weight" placeholder="请输入体重">
   <br>
   <button onclick="checkMood()">判断</button>
@@ -58,7 +58,7 @@
       if (weight <= 110) {
         result.innerHTML = "🎉 恭喜，今晚应该可以找她吃饭了！^_^";
       } else {
-        result.innerHTML = "😫 完蛋了，婕又要减肥了>_<!!!";
+        result.innerHTML = "完蛋了，婕又要减肥了>_<!!!";
       }
     }
   </script>
