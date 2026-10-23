@@ -5,18 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>超级赛车竞速</title>
     <style>
-        /* 基础重置 */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            /* 防止手机端长按选中文字或图片 */
+            -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
             -webkit-user-select: none;
             user-select: none;
         }
 
-        /* 网页背景（用于在电脑端预览时居中） */
         body {
             background-color: #121212;
             display: flex;
@@ -26,10 +24,9 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
-        /* 手机屏幕容器 */
         .mobile-container {
             width: 100%;
-            max-width: 430px; /* 限制最大宽度，适配 iPhone 14 Pro Max */
+            max-width: 430px;
             height: 100vh;
             max-height: 932px;
             background-color: rgba(255, 255, 255, 1);
@@ -39,17 +36,15 @@
             flex-direction: column;
         }
 
-        /* 顶部标题 */
         .header {
             text-align: center;
-            padding-top: 15vh; /* 用 vh 保证不同屏幕比例下的位置 */
+            padding-top: 15vh;
             font-size: 28px;
             font-weight: 900;
             color: #000;
             letter-spacing: 2px;
         }
 
-        /* 中间车辆图片区域 */
         .car-image-box {
             flex: 1;
             display: flex;
@@ -59,25 +54,22 @@
             background: radial-gradient(circle, rgba(220,220,220,1) 0%, rgba(255,255,255,1) 70%);
         }
 
-        /* 图片样式 */
         .car-image-box img {
             width: 100%;
             max-width: 380px;
             object-fit: contain;
-            /* 给图片加个进入动画 */
-            animation: slideUp 1s ease-out forwards;
             opacity: 0;
             transform: translateY(20px);
         }
 
-        @keyframes slideUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .started .car-image-box img {
+            animation: slideUp 1s ease-out forwards;
         }
 
-        /* 底部加载区域 */
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .footer {
             padding: 0 30px 10vh 30px;
         }
@@ -92,14 +84,12 @@
             align-items: center;
         }
 
-        /* 进度百分比数字 */
         .progress-text {
             font-size: 14px;
             color: #666;
             font-weight: normal;
         }
 
-        /* 进度条底色 */
         .progress-bar-bg {
             width: 100%;
             height: 20px;
@@ -108,44 +98,71 @@
             overflow: hidden;
         }
 
-        /* 进度条实际加载部分 */
         .progress-bar-fill {
-            width: 0%; /* 初始为0 */
+            width: 0%;
             height: 100%;
             background-color: #70e0e0;
             border-radius: 10px;
-            transition: width 0.1s linear; /* 平滑过渡 */
+            transition: width 0.1s linear;
         }
 
-        /* 适配真实手机全屏显示 */
+        .start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            cursor: pointer;
+            transition: opacity 0.5s ease;
+        }
+
+        .start-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .start-text {
+            color: #70e0e0;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.5; transform: scale(0.95); }
+        }
+
         @media (max-width: 450px) {
-            .mobile-container {
-                height: 100vh;
-                max-height: 100vh;
-                box-shadow: none;
-            }
+            .mobile-container { height: 100vh; max-height: 100vh; }
         }
     </style>
 </head>
 <body>
 
-    <div class="mobile-container">
+    <div class="mobile-container" id="appContainer">
         
-        <!-- 顶部标题 -->
-        <div class="header">
-            超级赛车竞速
+        <div class="start-overlay" id="startOverlay">
+            <div class="start-text">点击启动引擎</div>
         </div>
 
-        <!-- 中间图片 -->
+        <div class="header">超级赛车竞速</div>
+
         <div class="car-image-box">
-            <!-- ⚠️ 这里的 src 将指向你 GitHub 仓库里的图片 -->
-            <img id="mainCar" src="https://github.com/feiwenchao/jie-weight-check/blob/b77a5c26befcf3e6d363c755da5514cb55745ae1/image.png.png" alt="超级赛车">
+            <!-- ⚠️ 这里已经换成了你 GitHub 图床的直链 -->
+            <img src="https://raw.githubusercontent.com/feiwenchao/jie-weight-check/33d763d4d1ec24c14f2eff8d696c295236c5f312/image.png.png" alt="超级赛车">
         </div>
 
-        <!-- 底部加载区域 -->
         <div class="footer">
             <div class="enter-text">
-                <span id="loadingText">正在进入赛道</span>
+                <span id="loadingText">等待启动...</span>
                 <span class="progress-text" id="progressText">0%</span>
             </div>
             <div class="progress-bar-bg">
@@ -155,23 +172,53 @@
 
     </div>
 
-    <!-- 加载逻辑脚本 -->
     <script>
-        // 获取 DOM 元素
         const progressBar = document.getElementById('progressBar');
         const progressText = document.getElementById('progressText');
         const loadingText = document.getElementById('loadingText');
+        const startOverlay = document.getElementById('startOverlay');
+        const appContainer = document.getElementById('appContainer');
 
-        // 配置模拟加载参数
         let progress = 0;
-        const totalTime = 3500; // 总共加载时间（毫秒），比如 3.5 秒
-        const intervalTime = 50; // 每次更新的时间间隔（毫秒）
-        const step = 100 / (totalTime / intervalTime); // 每次增加的百分比
+        const totalTime = 4000;
+        const intervalTime = 50;
+        const step = 100 / (totalTime / intervalTime);
 
-        // 启动加载
+        let audioCtx = null;
+        let oscillator = null;
+        let gainNode = null;
+
+        startOverlay.addEventListener('click', () => {
+            startOverlay.classList.add('hidden');
+            appContainer.classList.add('started');
+            loadingText.innerText = "正在进入赛道";
+
+            playEngineSound();
+            startLoading();
+        });
+
+        function playEngineSound() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+
+            oscillator = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.setValueAtTime(50, audioCtx.currentTime);
+            oscillator.frequency.linearRampToValueAtTime(120, audioCtx.currentTime + 3.5);
+
+            gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+        }
+
         function startLoading() {
             const timer = setInterval(() => {
-                // 随机波动：有时候快，有时候慢，模拟真实网络
                 let randomStep = step * (0.5 + Math.random());
                 progress += randomStep;
 
@@ -179,27 +226,22 @@
                     progress = 100;
                     clearInterval(timer);
                     
-                    // 加载完成后的操作
+                    if (gainNode && audioCtx) {
+                        gainNode.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+                        setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 200);
+                    }
+
                     setTimeout(() => {
                         loadingText.innerText = "加载完成";
                         loadingText.style.color = "#70e0e0";
-                        // ⚠️ 未来这里可以写跳转代码，例如：
-                        // window.location.href = "game.html";
-                        console.log("加载完毕，准备进入游戏...");
+                        window.location.href = "menu.html"; 
                     }, 300);
                 }
 
-                // 更新 UI
                 progressBar.style.width = `${progress}%`;
                 progressText.innerText = `${Math.floor(progress)}%`;
             }, intervalTime);
         }
-
-        // 页面加载完后自动开始
-        window.onload = () => {
-            // 给一点初始缓冲时间，体验更好
-            setTimeout(startLoading, 500);
-        };
     </script>
 </body>
 </html>
