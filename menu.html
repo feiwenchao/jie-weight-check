@@ -189,7 +189,12 @@
 
     </div>
 
-    <script>
+      <script>
+        // 判断是不是直接从地址栏访问的 menu.html，如果是，强制踢回首页
+        if (document.referrer === "") {
+            window.location.href = "index.html";
+        }
+
         function goBack() { window.location.href = "index.html"; }
         function goToCreate() { window.location.href = "create.html"; }
         function goToJoin() { window.location.href = "join.html"; }
