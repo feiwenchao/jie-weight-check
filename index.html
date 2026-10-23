@@ -1,73 +1,24 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>婕的心情判断器</title>
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      padding: 30px;
-      background: #fefefe;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    input {
-      padding: 10px;
-      font-size: 16px;
-      width: 200px;
-      margin: 10px 0;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-    #result {
-      margin-top: 20px;
-      font-size: 20px;
-      color: #444;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开发侧教程</title>
+    
+    <!-- 1. 加载器，放在 head 里，每个页面引入一次即可 -->
+    <script src="https://img.js.design/assets/Resources/xframe/latest/jsframe.js"></script>
 </head>
 <body>
-  <h1>婕今天的心情如何呢</h1>
-  <p>请输入婕今天的体重（单位: 斤）:</p>
-  <input type="number" id="weight" placeholder="请输入体重">
-  <br>
-  <button onclick="checkMood()">判断</button>
-  <div id="result"></div>
+    <!-- 你可以放一些其他的标题或内容 -->
+    <h1>我的网页</h1>
 
-  <script>
-    function checkMood() {
-      const weight = parseInt(document.getElementById("weight").value);
-      const result = document.getElementById("result");
-      if (isNaN(weight)) {
-        result.innerHTML = "请输入有效的数字";
-        return;
-      }
-      if (weight === 110) {
-        result.innerHTML = "🎉 哇塞！你猜到婕的平均体重了😲";
-      }
-      else if (weight < 110)  {
-        result.innerHTML = "🎉 恭喜，今晚可以约婕一起吃饭啦^_^";
-      }
-     else if (weight > 110 && weight < 130)  {
-        result.innerHTML = "完蛋了，婕又要减肥了>_<!!!";
-      }
-       else {
-        result.innerHTML = " 别捣乱！";
-      }
-    }
-  </script>
+    <div class="box">
+        <!-- 2. 网页组件代码，放在 body 里，你想展示的地方 -->
+        <!-- ⚠️注意：这里的 src 必须是完整的 https 链接，不能是 /backend/ 这种本地路径 -->
+        <js-frame src="https://js.design/elements/js_5DiceXlQosH"></js-frame> 
+        <!-- 注意：把上面 src 里的链接换成你自己在截图里复制的那串！ -->
+    </div>
+
 </body>
 </html>
