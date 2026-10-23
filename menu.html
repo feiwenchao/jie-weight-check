@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>游戏主菜单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            /* 网页外层背景用深色，衬托手机屏幕 */
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: white;
+        }
+
+        .mobile-container {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            max-height: 932px;
+            
+            /* ⚠️ 这里开始修改背景 ⚠️ */
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            
+            /* 1. 底层背景图 (images (1).png) */
+            background-image: url('https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(1).png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* 2. 上层背景图 (images (5).jpg) 使用伪元素实现 */
+        .mobile-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 使用你提供的 images (5).jpg 直链 */
+            background-image: url('https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(5).jpg');
+            
+            /* 居中对齐，两边撑满 */
+            background-size: 100% auto; /* 宽度100%，高度按比例自动 */
+            background-position: center center; 
+            background-repeat: no-repeat;
+            
+            /* 设置层级，保证在底层背景之上，但在按钮和文字之下 */
+            z-index: 0; 
+            pointer-events: none; /* 防止这层挡住按钮的点击事件 */
+        }
+
+        /* 注意：因为加了伪元素层级，里面所有的内容层级都要提高，不然会被挡住 */
+        .top-bar, .welcome-title, .car-showcase, .button-group {
+            position: relative;
+            z-index: 1; 
+        }
+
+        /* --- 以下是你原本的样式，没有任何改动 --- */
+        
+        .top-bar {
+            padding: 40px 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .back-btn:active {
+            transform: scale(0.8);
+        }
+
+        .welcome-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 50, 50, 0.8), 0 0 20px rgba(255, 0, 0, 0.5);
+            margin-top: 10px;
+            letter-spacing: 2px;
+        }
+
+        .car-showcase {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .car-showcase img {
+            width: 100%;
+            max-width: 350px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .button-group {
+            padding: 0 30px 15vh 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            height: 55px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-create {
+            background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%);
+            box-shadow: 0 0 15px rgba(75, 60, 196, 0.4);
+        }
+
+        .btn-join {
+            background: linear-gradient(90deg, #e62e2e 0%, #ff5a5a 100%);
+            box-shadow: 0 0 15px rgba(230, 46, 46, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        
+        <div class="top-bar">
+            <div class="back-btn" onclick="goBack()"></div>
+        </div>
+
+        <div class="welcome-title">
+            欢迎来到超级赛车竞速！
+        </div>
+
+        <div class="car-showcase">
+            <!-- 如果你这里还要放赛车图片，依然可以留在这里 -->
+            <img src="https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(1).png" alt="赛车" style="display: none;"> 
+            <!-- 注：我把中间原本占位的图隐藏了，因为你说那张图是背景了，避免重复 -->
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-create" onclick="goToCreate()">创建比赛</button>
+            <button class="btn btn-join" onclick="goToJoin()">加入比赛</button>
+        </div>
+
+    </div>
+
+    <script>
+        function goBack() { window.location.href = "index.html"; }
+        function goToCreate() { window.location.href = "create.html"; }
+        function goToJoin() { window.location.href = "join.html"; }
+    </script>
+</body>
+</html>
