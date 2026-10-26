@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>比赛记录</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; display: flex; flex-direction: column; position: relative; }
+        .top-bar { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+        .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        .title { font-size: 18px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 8px rgba(112,224,224,0.5); }
+        .content { padding: 0 30px; flex: 1; position: relative; z-index: 2; overflow-y: auto; }
+        
+        .history-item { 
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%); 
+            padding: 15px; margin-bottom: 12px; border-radius: 8px; 
+            border-left: 4px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; /* 所有状态都显示手型 */
+            transition: all 0.2s;
+        }
+        .history-item:active { transform: scale(0.98); }
+        .history-item.ongoing { border-left-color: #ffb84d; }
+        
+        .info-left { display: flex; flex-direction: column; gap: 5px; }
+        .time-text { font-size: 12px; color: #aaa; text-shadow: 0 1px 2px #000;}
+        .rank-text { font-size: 15px; font-weight: bold; color: #fff; text-shadow: 0 1px 2px #000; }
+        .rank-text span { color: #ff5a5a; font-size: 18px; }
+        
+        .reward-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+        .status-text { font-size: 12px; font-weight: bold; }
+        .status-done { color: #3cc44b; }
+        .status-ongoing { color: #ffb84d; animation: pulse 1.5s infinite; }
+        .reward-text { font-size: 14px; color: #70e0e0; font-weight: bold; }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* 弹窗样式 */
+        .modal-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10; justify-content: center; align-items: center; }
+        .modal-box { width: 90%; background: #040e28; border: 1px solid #70e0e0; border-radius: 10px; padding: 20px; box-shadow: 0 0 20px rgba(112,224,224,0.3); }
+        .modal-title { color: #ffb84d; font-size: 16px; text-align: center; margin-bottom: 15px; font-weight: bold; }
+        .modal-list { list-style: none; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; }
+        .modal-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 13px; }
+        .modal-list li:last-child { border-bottom: none; }
+        .modal-list li.me { color: #70e0e0; font-weight: bold; }
+        .close-btn { width: 100%; padding: 10px; margin-top: 15px; background: #2b1c8a; border: none; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-bar">
+            <div class="back-btn" onclick="window.location.href='menu.html'"></div>
+            <div class="title">我的比赛记录</div>
+            <div style="width:25px;"></div>
+        </div>
+        <div class="content" id="historyList"></div>
+
+        <!-- 查看明细的弹窗 -->
+        <div class="modal-overlay" id="detailModal">
+            <div class="modal-box">
+                <div class="modal-title">比赛结算明细</div>
+                <ul class="modal-list" id="modalList"></ul>
+                <button class="close-btn" onclick="document.getElementById('detailModal').style.display='none'">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const historyListEl = document.getElementById('historyList');
+        
+        function renderHistory() {
+            const history = getHistory();
+            
+            if (history.length === 0) {
+                historyListEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:50px;">暂无比赛记录，快去跑两圈吧！</div>`;
+                return;
+            }
+
+            historyListEl.innerHTML = '';
+            history.forEach((item) => {
+                const isOngoing = item.status === '正在进行中';
+                const div = document.createElement('div');
+                div.className = `history-item ${isOngoing ? 'ongoing' : ''}`;
+                
+                let rankHtml = item.rank === '-' ? '' : `第 <span>${item.rank}</span> 名`;
+                if (isOngoing) rankHtml = '比赛进行中';
+
+                div.innerHTML = `
+                    <div class="info-left">
+                        <div class="time-text">${item.time}</div>
+                        <div class="rank-text">${rankHtml}</div>
+                    </div>
+                    <div class="reward-right">
+                        <div class="status-text ${isOngoing ? 'status-ongoing' : 'status-done'}">${item.status}</div>
+                        <div class="reward-text">${item.rewardText}</div>
+                    </div>
+                `;
+
+                // 🌟 点击逻辑：无论是进行中还是已完成，都允许点击
+                div.onclick = () => {
+                    if (isOngoing) {
+                        // 如果是“进行中”，把当前房间信息写入缓存，跳转回 game.html
+                        localStorage.setItem('isReconnect', 'true');
+                        localStorage.setItem('currentRoom', JSON.stringify({ 
+                            id: item.roomId, 
+                            level: item.level, 
+                            initialPlayers: 1,
+                            // 传入之前记录的比赛结束时间或者标记
+                            endTime: item.endTime || (Date.now() + 120000) 
+                        }));
+                        window.location.href = "game.html";
+                    } else {
+                        // 如果是“已完成”，弹出结算明细
+                        if (item.allPlayers && item.allPlayers.length > 0) {
+                            const modalList = document.getElementById('modalList');
+                            modalList.innerHTML = '';
+                            item.allPlayers.forEach(p => {
+                                let isMeClass = p.isMe ? 'class="me"' : '';
+                                modalList.innerHTML += `<li ${isMeClass}>
+                                    <span>第${p.rank}名: ${p.name} ${p.isMe ? '(我)' : ''}</span>
+                                    <span>${p.reward}</span>
+                                </li>`;
+                            });
+                            document.getElementById('detailModal').style.display = 'flex';
+                        } else {
+                            alert("该场比赛明细数据缺失~");
+                        }
+                    }
+                };
+
+                historyListEl.appendChild(div);
+            });
+        }
+
+        renderHistory();
+    </script>
+</body>
+</html>
