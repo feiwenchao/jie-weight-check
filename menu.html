@@ -4,200 +4,92 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>游戏主菜单</title>
+    <script src="data.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
-
-        body {
-            /* 网页外层背景用深色，衬托手机屏幕 */
-            background-color: #121212;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-        }
-
-        .mobile-container {
-            width: 100%;
-            max-width: 430px;
-            height: 100vh;
-            max-height: 932px;
-            
-            /* ⚠️ 这里开始修改背景 ⚠️ */
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            
-            /* 1. 底层背景图 (images (1).png) */
-            background-image: url('https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(1).png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        /* 2. 上层背景图 (images (5).jpg) 使用伪元素实现 */
-        .mobile-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            /* 使用你提供的 images (5).jpg 直链 */
-            background-image: url('https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(5).jpg');
-            
-            /* 居中对齐，两边撑满 */
-            background-size: 100% auto; /* 宽度100%，高度按比例自动 */
-            background-position: center center; 
-            background-repeat: no-repeat;
-            
-            /* 设置层级，保证在底层背景之上，但在按钮和文字之下 */
-            z-index: 0; 
-            pointer-events: none; /* 防止这层挡住按钮的点击事件 */
-        }
-
-        /* 注意：因为加了伪元素层级，里面所有的内容层级都要提高，不然会被挡住 */
-        .top-bar, .welcome-title, .car-showcase, .button-group {
-            position: relative;
-            z-index: 1; 
-        }
-
-        /* --- 以下是你原本的样式，没有任何改动 --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
         
-        .top-bar {
-            padding: 40px 30px;
-            display: flex;
-            align-items: center;
+        .mobile-container {
+            width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+            background-color: #040e28; background-image: url('menu.png');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+        .mobile-container::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('menu-car.jpg'); background-size: 100% auto;
+            background-position: center; background-repeat: no-repeat; z-index: 0; opacity: 0.3; pointer-events: none;
         }
 
-        .back-btn {
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            transition: transform 0.2s;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E");
-            background-size: contain;
-            background-repeat: no-repeat;
-        }
+        .top-bar { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+        .back-btn { width: 30px; height: 30px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        
+        .top-right { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(112,224,224,0.3); }
+        .wallet { font-size: 14px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 5px rgba(112,224,224,0.5); }
+        .cart-icon { width: 24px; height: 24px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2370e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'%3E%3C/circle%3E%3Ccircle cx='20' cy='21' r='1'%3E%3C/circle%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'%3E%3C/path%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; transition: transform 0.2s; }
+        .cart-icon:active { transform: scale(0.8); }
 
-        .back-btn:active {
-            transform: scale(0.8);
-        }
-
-        .welcome-title {
-            text-align: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 50, 50, 0.8), 0 0 20px rgba(255, 0, 0, 0.5);
-            margin-top: 10px;
-            letter-spacing: 2px;
-        }
-
-        .car-showcase {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .car-showcase img {
-            width: 100%;
-            max-width: 350px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6));
-            animation: float 3s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .button-group {
-            padding: 0 30px 15vh 30px;
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-        }
-
-        .btn {
-            flex: 1;
-            height: 55px;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            transition: all 0.1s ease;
+        .welcome-title { text-align: center; font-size: 22px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(255, 50, 50, 0.8); margin-top: 10px; letter-spacing: 2px; position: relative; z-index: 2; }
+        .car-showcase { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; z-index: 2; }
+        .car-showcase img { width: 100%; max-width: 350px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)); animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        
+        .button-group { padding: 0 30px 15px 30px; display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 2; }
+        
+        .menu-btn {
+            width: 100%; padding: 15px 20px; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;
             clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .menu-btn:active { transform: scale(0.97); }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
+        .menu-btn.create { background: linear-gradient(135deg, rgba(26, 41, 128, 0.8) 0%, rgba(38, 208, 206, 0.6) 100%); border-left: 4px solid #26d0ce; }
+        .menu-btn.join { background: linear-gradient(135deg, rgba(128, 0, 0, 0.8) 0%, rgba(255, 75, 43, 0.6) 100%); border-left: 4px solid #ff4b2b; }
+        .menu-btn.history { background: linear-gradient(135deg, rgba(58, 28, 113, 0.8) 0%, rgba(215, 109, 119, 0.6) 100%); border-left: 4px solid #d76d77; }
 
-        .btn-create {
-            background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%);
-            box-shadow: 0 0 15px rgba(75, 60, 196, 0.4);
-        }
-
-        .btn-join {
-            background: linear-gradient(90deg, #e62e2e 0%, #ff5a5a 100%);
-            box-shadow: 0 0 15px rgba(230, 46, 46, 0.4);
-        }
+        .arrow { font-size: 18px; color: #fff; opacity: 0.7; }
     </style>
 </head>
 <body>
-
     <div class="mobile-container">
         
         <div class="top-bar">
-            <div class="back-btn" onclick="goBack()"></div>
+            <div class="back-btn" onclick="window.location.href='index.html'"></div>
+            <div class="top-right">
+                <div class="wallet" id="walletInfo">0 秘宝</div>
+                <!-- 确保跳转到 shop.html -->
+                <div class="cart-icon" onclick="window.location.href='shop.html'"></div>
+            </div>
         </div>
 
-        <div class="welcome-title">
-            欢迎来到超级赛车竞速！
-        </div>
-
-        <div class="car-showcase">
-            <!-- 如果你这里还要放赛车图片，依然可以留在这里 -->
-            <img src="https://raw.githubusercontent.com/feiwenchao/jie-weight-check/a643e12f548e338a66c5119316785a443280d737/images%20(1).png" alt="赛车" style="display: none;"> 
-            <!-- 注：我把中间原本占位的图隐藏了，因为你说那张图是背景了，避免重复 -->
-        </div>
-
+        <div class="welcome-title">欢迎来到超级赛车竞速！</div>
+        
+        <div class="car-showcase"><img src="menu-car.jpg" alt="赛车"></div>
+        
         <div class="button-group">
-            <button class="btn btn-create" onclick="goToCreate()">创建比赛</button>
-            <button class="btn btn-join" onclick="goToJoin()">加入比赛</button>
+            <button class="menu-btn create" onclick="window.location.href='create.html'">
+                <span>创建比赛</span>
+                <span class="arrow">➔</span>
+            </button>
+            <button class="menu-btn join" onclick="window.location.href='lobby.html'">
+                <span>加入比赛</span>
+                <span class="arrow">➔</span>
+            </button>
+            <!-- 确保跳转到 history.html -->
+            <button class="menu-btn history" onclick="window.location.href='history.html'">
+                <span>查看比赛记录</span>
+                <span class="arrow">➔</span>
+            </button>
         </div>
-
     </div>
 
-      <script>
-        // 判断是不是直接从地址栏访问的 menu.html，如果是，强制踢回首页
-        if (document.referrer === "") {
-            window.location.href = "index.html";
-        }
-
-        function goBack() { window.location.href = "index.html"; }
-        function goToCreate() { window.location.href = "create.html"; }
-        function goToJoin() { window.location.href = "join.html"; }
+    <script>
+        try {
+            const p = getPlayer();
+            if(p) { document.getElementById('walletInfo').innerText = `${p.treasures} 秘宝`; }
+        } catch(e) { console.log("数据读取失败"); }
     </script>
 </body>
 </html>
