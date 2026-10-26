@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>游戏房间</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; padding: 20px; display: flex; flex-direction: column; position: relative; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px; position: relative; z-index: 2; }
+        .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        .header { text-align: center; padding-bottom: 15px; border-bottom: 1px solid rgba(112,224,224,0.3); position: relative; z-index: 2; }
+        .header h2 { font-size: 18px; color: #70e0e0; letter-spacing: 1px; text-shadow: 0 0 8px rgba(112,224,224,0.5); }
+        .header p { font-size: 12px; text-shadow: 0 1px 2px #000; }
+        .player-list { flex: 1; margin-top: 15px; position: relative; z-index: 2; overflow-y: auto;}
+        .player-item { background: linear-gradient(90deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%); padding: 12px 15px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; border-left: 3px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4); font-size: 14px; color: white; }
+        .player-item span { text-shadow: 0 1px 2px #000; }
+        .status-text { text-align: center; font-size: 16px; color: #ff5a5a; margin-bottom: 15px; font-weight: bold; position: relative; z-index: 2; text-shadow: 0 0 5px rgba(255,90,90,0.5); }
+        #result-area { display: none; padding: 15px; background: linear-gradient(135deg, rgba(10, 20, 40, 0.95) 0%, rgba(5, 10, 25, 0.95) 100%); border-radius: 10px; border: 1px solid #70e0e0; margin-top: 10px; position: relative; z-index: 2; flex: 1; overflow-y: auto; box-shadow: 0 0 20px rgba(112,224,224,0.2); }
+        .result-title { color: #ffb84d; font-size: 15px; font-weight: bold; text-align: center; margin-bottom: 10px; line-height: 1.4; text-shadow: 0 1px 2px #000; }
+        .result-title span { font-size: 18px !important; }
+        .result-rank-list { list-style: none; margin-top: 10px; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; border: 1px solid rgba(112,224,224,0.2); }
+        .result-rank-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 13px; text-shadow: 0 1px 1px #000; }
+        .result-rank-list li:last-child { border-bottom: none; }
+        .result-rank-list li.me { color: #70e0e0; font-weight: bold; }
+        .btn-back-menu { width: 100%; padding: 12px; background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%); color: white; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); margin-top: 15px; text-shadow: 0 1px 2px #000;}
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-nav">
+            <div class="back-btn" onclick="window.location.href='lobby.html'"></div>
+            <h2 id="roomTitle" style="font-size:16px; margin:0; color:#70e0e0;">房间号: ------</h2>
+            <div style="width:25px;"></div>
+        </div>
+        <div class="header" style="border-bottom:none; padding-top:0;">
+            <p id="roomLevel" style="font-size: 12px; color:#aaa;">等级: 初级房</p>
+        </div>
+        <div class="player-list" id="playerList"></div>
+        <div class="status-text" id="statusText">正在读取房间信息...</div>
+        <div id="result-area">
+            <div class="result-title" id="mainResultText"></div>
+            <ul class="result-rank-list" id="rankListText"></ul>
+            <button class="btn-back-menu" onclick="window.location.href='lobby.html'">返回房间大厅</button>
+        </div>
+    </div>
+
+    <script>
+        const room = JSON.parse(localStorage.getItem('currentRoom'));
+        if (!room) { 
+            window.location.href = "menu.html"; 
+        } else {
+            document.getElementById('roomTitle').innerText = `房间号: ${room.id}`;
+            document.getElementById('roomLevel').innerText = `等级: ${room.level === 'low' ? '初级房' : room.level === 'mid' ? '中级房' : '高级房'}`;
+            
+            // 判断是不是从记录重连来的
+            const isReconnect = localStorage.getItem('isReconnect') === 'true';
+            const history = getHistory();
+            const currentMatch = history.find(h => h.status === '正在进行中' && h.roomId === room.id);
+            
+            // 如果是新开一局，记录历史
+            if (!isReconnect && !currentMatch) {
+                addOngoingHistory(room);
+            }
+            
+            const maxPlayers = 5;
+            let playerCount = 1;
+            let isRaceStarted = false;
+            const playerList = document.getElementById('playerList');
+            const statusText = document.getElementById('statusText');
+            
+            let allPlayers = [{ name: getMyName(), isMe: true }];
+            
+            // 如果是重连，直接满员
+            let botsInRoom = isReconnect ? 4 : (parseInt(room.initialPlayers) || 1); 
+            
+            for (let i = 0; i < botsInRoom; i++) {
+                if (playerCount < maxPlayers) {
+                    allPlayers.push({ name: generateRacerName(), isMe: false });
+                    playerCount++;
+                }
+            }
+
+            function renderPlayerList() {
+                playerList.innerHTML = ''; 
+                for (let i = 0; i < allPlayers.length; i++) {
+                    const p = allPlayers[i];
+                    const div = document.createElement('div');
+                    div.className = 'player-item';
+                    if (p.isMe) {
+                        div.innerHTML = `<span>👑 ${p.name} (我)</span> <span style="color: #70e0e0;">已准备</span>`;
+                    } else {
+                        div.innerHTML = `<span>🤖 ${p.name}</span> <span style="color: #aaa;">已准备</span>`;
+                    }
+                    playerList.appendChild(div);
+                }
+                for (let i = playerCount; i < maxPlayers; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'player-item';
+                    div.style.opacity = '0.3';
+                    div.innerHTML = `<span>等待玩家加入...</span> <span>...</span>`;
+                    playerList.appendChild(div);
+                }
+                statusText.innerText = `房间内玩家 (${playerCount}/${maxPlayers})`;
+            }
+            renderPlayerList();
+
+            // 如果是重连，走重连逻辑
+            if (isReconnect) {
+                localStorage.removeItem('isReconnect'); 
+                if (currentMatch && currentMatch.startTime) {
+                    let elapsed = Math.floor((Date.now() - currentMatch.startTime) / 1000);
+                    let remaining = 10 - elapsed; // 测试阶段 10 秒，线上改 120
+                    if (remaining > 0) {
+                        startRaceCountdown(remaining);
+                    } else {
+                        calculateResults(); 
+                    }
+                } else {
+                    startRaceCountdown(10);
+                }
+            } else {
+                // 新开赛逻辑：进人，满了开始倒计时
+                function robotEnter() {
+                    if (isRaceStarted) return;
+                    if (playerCount < maxPlayers) {
+                        playerCount++;
+                        allPlayers.push({ name: generateRacerName(), isMe: false });
+                        renderPlayerList();
+                        if (playerCount < maxPlayers) {
+                            setTimeout(robotEnter, 1000); 
+                        } else {
+                            isRaceStarted = true;
+                            // 记录开赛时间
+                            updateHistoryStartTime(Date.now());
+                            startRaceCountdown(10); 
+                        }
+                    }
+                }
+                setTimeout(robotEnter, 500);
+            }
+
+            function startRaceCountdown(seconds) {
+                let timeLeft = seconds;
+                statusText.innerText = `比赛进行中... 剩余 ${timeLeft}s`;
+                
+                const timer = setInterval(() => {
+                    timeLeft--;
+                    statusText.innerText = `比赛进行中... 剩余 ${timeLeft}s`;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        calculateResults();
+                    }
+                }, 1000);
+            }
+
+            function calculateResults() {
+                const p = getPlayer();
+                
+                allPlayers.forEach(player => {
+                    player.speed = Math.random() * 20 + 80; 
+                });
+                allPlayers.sort((a, b) => b.speed - a.speed);
+                const myRank = allPlayers.findIndex(player => player.isMe) + 1;
+                
+                let allRewards = [0, 0, 0, 0, 0];
+                if (room.level === 'high') allRewards = [116, 110, 108, 106, 0];
+                else if (room.level === 'mid') allRewards = [51.6, 51, 50.8, 50.6, 0];
+                else allRewards = [10.16, 10.1, 10.08, 10.06, 0];
+
+                const fifthPlaceCards = Math.random() > 0.5 ? 1 : 2;
+                let myReward = allRewards[myRank - 1];
+                let rewardText = "";
+
+                if (myRank < 5) {
+                    p.treasures += myReward;
+                    savePlayer(p);
+                    rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
+                } else {
+                    p.cards[room.level] += fifthPlaceCards;
+                    p.cardExpiry[room.level] = Date.now() + 48 * 60 * 60 * 1000;
+                    savePlayer(p);
+                    rewardText = `${fifthPlaceCards} 张房卡`; 
+                }
+
+                let fullListForHistory = allPlayers.map((player, index) => {
+                    let rStr = "";
+                    if (index < 4) {
+                        rStr = `${allRewards[index].toFixed(2).replace(/\.?0+$/, '')} 秘宝`;
+                    } else {
+                        rStr = `${fifthPlaceCards} 张房卡`;
+                    }
+                    return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
+                });
+
+                completeOngoingHistory(myRank, rewardText, fullListForHistory);
+
+                statusText.style.display = "none";
+                document.getElementById('result-area').style.display = "block";
+
+                let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
+                document.getElementById('mainResultText').innerHTML = mainText;
+
+                let rankListHtml = "";
+                fullListForHistory.forEach(item => {
+                    let isMeClass = item.isMe ? 'class="me"' : '';
+                    rankListHtml += `<li ${isMeClass}>
+                        <span>第${item.rank}名: ${item.name} ${item.isMe ? '(我)' : ''}</span>
+                        <span>${item.reward}</span>
+                    </li>`;
+                });
+                
+                document.getElementById('rankListText').innerHTML = rankListHtml;
+            }
+        }
+    </script>
+</body>
+</html>
