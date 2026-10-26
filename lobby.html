@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>加入比赛</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; display: flex; flex-direction: column; position: relative; }
+        .top-bar { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+        .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        .balance { font-size: 14px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 5px rgba(112,224,224,0.5); }
+        .content { padding: 0 30px; flex: 1; display: flex; flex-direction: column; position: relative; z-index: 2; }
+        .input-section { margin-bottom: 15px; background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 100%); padding: 15px; border-radius: 10px; border: 1px solid rgba(112,224,224,0.2); }
+        .input-section h3 { font-size: 14px; margin-bottom: 10px; color: #fff; text-shadow: 0 1px 2px #000; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex: 1; padding: 12px; font-size: 14px; text-align: center; letter-spacing: 2px; border-radius: 6px; border: 1px solid rgba(112,224,224,0.6); background: rgba(0,0,0,0.7); color: #70e0e0; outline: none; box-shadow: inset 0 0 8px rgba(0,0,0,0.8); }
+        .btn-search { padding: 0 15px; background: linear-gradient(90deg, #2b1c8a, #4b3cc4); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); text-shadow: 0 1px 2px #000; }
+        .divider { display: flex; align-items: center; color: #aaa; font-size: 12px; margin: 10px 0 15px 0; text-shadow: 0 1px 2px #000; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.2); margin: 0 10px; }
+        
+        /* 刷新按钮样式 */
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .room-list-title { font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000; font-weight: bold; }
+        .btn-refresh { background: rgba(112,224,224,0.1); border: 1px solid #70e0e0; color: #70e0e0; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .btn-refresh:active { transform: scale(0.95); }
+        
+        .room-list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        .room-item { background: linear-gradient(135deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%); padding: 12px 15px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .room-item:active { transform: scale(0.98); }
+        .room-item.low { border-color: #3cc44b; }
+        .room-item.mid { border-color: #c43cb3; }
+        .room-item.high { border-color: #c46b3c; }
+        .room-info h3 { font-size: 15px; margin-bottom: 3px; text-shadow: 0 1px 2px #000; }
+        .room-info p { font-size: 12px; color: #ccc; }
+        .room-status { font-size: 13px; color: #70e0e0; text-shadow: 0 0 5px rgba(112,224,224,0.3); font-weight: bold; }
+        .room-entry { font-size: 13px; color: #70e0e0; font-weight: bold; margin-left: 8px; text-shadow: 0 0 5px rgba(112,224,224,0.5); }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-bar">
+            <div class="back-btn" onclick="window.location.href='menu.html'"></div>
+            <div class="balance" id="balance">0 秘宝</div>
+        </div>
+        <div class="content">
+            <div class="input-section">
+                <h3>输入房间号加入</h3>
+                <div class="input-area">
+                    <input type="text" id="roomInput" placeholder="输入大厅中的房间号">
+                    <button class="btn-search" onclick="searchRoom()">进入</button>
+                </div>
+            </div>
+            <div class="divider">或 者 从 大 厅 加 入</div>
+            
+            <div class="list-header">
+                <div class="room-list-title">🏆 在线房间列表</div>
+                <!-- 🌟 新增：刷新按钮 -->
+                <button class="btn-refresh" onclick="refreshRooms()">🔄 刷新大厅</button>
+            </div>
+            
+            <div class="room-list" id="roomList"></div>
+        </div>
+    </div>
+
+    <script>
+        let p = getPlayer();
+        document.getElementById('balance').innerText = `${p.treasures} 秘宝`;
+
+        // 核心逻辑：检查并自愈数据
+        function checkAndHealData() {
+            let activeRooms = JSON.parse(localStorage.getItem('activeRooms'));
+            let isValidData = activeRooms && Array.isArray(activeRooms);
+            
+            if (!isValidData) {
+                activeRooms = [];
+            }
+
+            // 只保留还在等待中的房间
+            let waitingRooms = activeRooms.filter(r => r.status === 'waiting');
+
+            // 如果等待中的房间少于3个，疯狂补足！
+            if (waitingRooms.length < 3) {
+                const levels = ['low', 'mid', 'high'];
+                const names = { low: '初级房', mid: '中级房', high: '高级房' };
+                
+                for (let i = waitingRooms.length; i < 3; i++) {
+                    let level = levels[Math.floor(Math.random() * 3)];
+                    activeRooms.push({
+                        id: Math.floor(1000 + Math.random() * 9000).toString(),
+                        level: level,
+                        name: names[level],
+                        currentPlayers: Math.floor(Math.random() * 3) + 1, // 1-3人
+                        status: 'waiting'
+                    });
+                }
+                localStorage.setItem('activeRooms', JSON.stringify(activeRooms));
+            }
+            return activeRooms;
+        }
+
+        let activeRooms = checkAndHealData();
+
+        const roomListEl = document.getElementById('roomList');
+        
+        function renderRooms() {
+            roomListEl.innerHTML = '';
+            // 每次渲染先检查一遍数据状态
+            activeRooms = checkAndHealData();
+            
+            let validRooms = activeRooms.filter(r => r.status === 'waiting');
+
+            validRooms.forEach(room => {
+                const div = document.createElement('div');
+                div.className = `room-item ${room.level}`;
+                let price = room.level === 'low' ? 10 : (room.level === 'mid' ? 50 : 100);
+                
+                div.innerHTML = `
+                    <div class="room-info">
+                        <h3>${room.name} (房号: ${room.id})</h3>
+                        <p>消耗 ${price} 秘宝进入</p>
+                    </div>
+                    <div style="display:flex; align-items:center;">
+                        <span class="room-status">${room.currentPlayers}/5 人</span>
+                        <span class="room-entry">进入 ➔</span>
+                    </div>
+                `;
+                div.onclick = () => enterRoom(room.id, room.level, room.currentPlayers);
+                roomListEl.appendChild(div);
+            });
+        }
+        renderRooms();
+
+        // 刷新按钮点击事件
+        function refreshRooms() {
+            // 强制清除所有比赛中的房间，只保留等待中的，然后重新渲染
+            let roomsData = JSON.parse(localStorage.getItem('activeRooms'));
+            if (roomsData) {
+                roomsData = roomsData.filter(r => r.status === 'waiting');
+                localStorage.setItem('activeRooms', JSON.stringify(roomsData));
+            }
+            activeRooms = checkAndHealData();
+            renderRooms();
+            alert("大厅已刷新！");
+        }
+
+        function enterRoom(id, level, initialPlayers) {
+            let p = getPlayer();
+            let price = level === 'low' ? 10 : (level === 'mid' ? 50 : 100);
+            
+            if (p.treasures < price) { alert("秘宝不足！"); return; }
+            p.treasures -= price;
+            savePlayer(p);
+
+            let roomsData = JSON.parse(localStorage.getItem('activeRooms'));
+            let roomIndex = roomsData.findIndex(r => r.id === id);
+            if (roomIndex > -1) {
+                roomsData[roomIndex].status = 'racing'; // 标记为开赛
+                localStorage.setItem('activeRooms', JSON.stringify(roomsData));
+            }
+
+            localStorage.setItem('currentRoom', JSON.stringify({ 
+                id: id, level: level, initialPlayers: initialPlayers 
+            }));
+            window.location.href = "game.html";
+        }
+
+        function searchRoom() {
+            const inputId = document.getElementById('roomInput').value.trim();
+            if (inputId === "") { alert("请输入房间号"); return; }
+            const targetRoom = activeRooms.find(r => r.id === inputId);
+            
+            if (targetRoom) {
+                if (targetRoom.status !== 'waiting') {
+                    alert("该房间比赛已经开始，无法加入！");
+                    return;
+                }
+                enterRoom(targetRoom.id, targetRoom.level, targetRoom.currentPlayers);
+            } else {
+                alert(`房间号 ${inputId} 不存在！`);
+            }
+        }
+    </script>
+</body>
+</html>
