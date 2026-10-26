@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>加入比赛</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; display: flex; flex-direction: column; }
+        .top-bar { padding: 40px 30px; }
+        .back-btn { width: 40px; height: 40px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        .content { padding: 0 30px; text-align: center; }
+        input { width: 100%; padding: 20px; font-size: 24px; text-align: center; letter-spacing: 10px; border-radius: 8px; border: 1px solid rgba(112,224,224,0.5); margin: 20px 0; background: rgba(0,0,0,0.5); color: #70e0e0; outline: none; }
+        .btn-join { width: 100%; padding: 18px; background: linear-gradient(90deg, #e62e2e 0%, #ff5a5a 100%); border: none; border-radius: 8px; color: white; font-size: 18px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
+        .btn-join:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-bar"><div class="back-btn" onclick="window.location.href='menu.html'"></div></div>
+        <div class="content">
+            <h2 style="margin-bottom: 10px;">输入房间号</h2>
+            <p style="font-size: 14px; color: #aaa;">* 测试阶段，进房默认模拟为“初级房”，扣除 10 秘宝</p>
+            <input type="text" id="roomInput" placeholder="000000" maxlength="6">
+            <button class="btn-join" onclick="joinRoom()">进入房间</button>
+        </div>
+    </div>
+
+    <script>
+        function joinRoom() {
+            const id = document.getElementById('roomInput').value;
+            if (id.length !== 6) { alert("请输入6位房间号！"); return; }
+            
+            let p = getPlayer();
+            // 测试阶段，统一按初级房扣费 10
+            if (p.treasures >= 10) {
+                p.treasures -= 10;
+                savePlayer(p);
+                localStorage.setItem('currentRoom', JSON.stringify({ id: id, level: 'low', isHost: false }));
+                window.location.href = "game.html";
+            } else { alert("秘宝不足，无法加入！"); }
+        }
+    </script>
+</body>
+</html>
