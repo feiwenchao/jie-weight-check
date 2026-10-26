@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>创建比赛</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        
+        .mobile-container { 
+            width: 100%; max-width: 430px; height: 100vh; 
+            background-color: #040e28; background-image: url('menu.png'); 
+            background-size: cover; display: flex; flex-direction: column; position: relative; 
+        }
+        .mobile-container::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('menu-car.jpg'); background-size: 100% auto;
+            background-position: center; background-repeat: no-repeat; z-index: 0; opacity: 0.15; pointer-events: none;
+        }
+        
+        .top-bar { padding: 20px 30px; position: relative; z-index: 2; display: flex; align-items: center; }
+        .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        
+        .content { padding: 0 30px; position: relative; z-index: 2; text-align: center; flex: 1; display: flex; flex-direction: column; justify-content: center; }
+        .content h2 { font-size: 20px; margin-bottom: 30px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); letter-spacing: 1px; }
+        
+        /* ==========================================
+           🌟 创建房间按钮：半透明渐变 + 切角 + 左侧发光条
+           ========================================== */
+        .room-btn { 
+            width: 100%;
+            padding: 18px 20px; 
+            margin-bottom: 20px; 
+            border: none; 
+            border-radius: 8px; 
+            color: white; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            transition: all 0.2s ease; 
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border-left: 4px solid;
+        }
+        .room-btn:active { transform: scale(0.97); }
+
+        /* 初级房：半透明绿到青 */
+        .room-btn.low { 
+            background: linear-gradient(135deg, rgba(28, 138, 43, 0.8) 0%, rgba(60, 196, 75, 0.6) 100%); 
+            border-color: #3cc44b;
+        }
+        
+        /* 中级房：半透明紫到粉 */
+        .room-btn.mid { 
+            background: linear-gradient(135deg, rgba(138, 28, 122, 0.8) 0%, rgba(196, 60, 179, 0.6) 100%); 
+            border-color: #c43cb3;
+        }
+        
+        /* 高级房：半透明橙到金 */
+        .room-btn.high { 
+            background: linear-gradient(135deg, rgba(138, 60, 28, 0.8) 0%, rgba(196, 107, 60, 0.6) 100%); 
+            border-color: #c46b3c;
+        }
+
+        .arrow { font-size: 18px; color: #fff; opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-bar">
+            <div class="back-btn" onclick="window.location.href='menu.html'"></div>
+        </div>
+        
+        <div class="content">
+            <h2>选择房间等级创建</h2>
+            
+            <button class="room-btn low" onclick="openRoom('low')">
+                <span>初级房 (消耗1张初级卡)</span>
+                <span class="arrow">➔</span>
+            </button>
+            
+            <button class="room-btn mid" onclick="openRoom('mid')">
+                <span>中级房 (消耗1张中级卡)</span>
+                <span class="arrow">➔</span>
+            </button>
+            
+            <button class="room-btn high" onclick="openRoom('high')">
+                <span>高级房 (消耗1张高级卡)</span>
+                <span class="arrow">➔</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function openRoom(level) {
+            let p = getPlayer();
+            if (p.cards[level] > 0) {
+                p.cards[level] -= 1;
+                savePlayer(p);
+                const roomId = Math.floor(100000 + Math.random() * 900000).toString();
+                localStorage.setItem('currentRoom', JSON.stringify({ id: roomId, level: level, isHost: true, initialPlayers: 0 }));
+                window.location.href = "game.html";
+            } else { 
+                alert("房卡不足！请去商城购买或参与游戏赢取房卡。"); 
+            }
+        }
+    </script>
+</body>
+</html>
