@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>秘宝商城</title>
+    <script src="data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
+        .mobile-container {
+            width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
+            background-color: #040e28; background-image: url('menu.png');
+            background-size: cover; background-position: center;
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+        .top-bar { padding: 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
+        .back-btn { width: 30px; height: 30px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        .back-btn:active { transform: scale(0.8); }
+        .balance { font-size: 18px; color: #70e0e0; font-weight: bold; }
+        .content { padding: 0 30px; position: relative; z-index: 2; }
+        .card-box { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 20px; margin-bottom: 20px; border-radius: 8px; border: 1px solid rgba(112,224,224,0.3); }
+        .card-box h3 { font-size: 20px; margin-bottom: 5px; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .card-box p { font-size: 14px; color: #aaa; }
+        .btn-buy { background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); }
+        .btn-buy:active { transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <div class="top-bar">
+            <!-- 点击这里返回菜单 -->
+            <div class="back-btn" onclick="window.location.href='menu.html'"></div>
+            <div class="balance" id="balance">0 秘宝</div>
+        </div>
+        <div class="content" id="shop-list"></div>
+    </div>
+
+    <script>
+        try {
+            const player = getPlayer();
+            document.getElementById('balance').innerText = `${player.treasures} 秘宝`;
+            
+            const prices = { low: 10, mid: 50, high: 100 }; 
+            const names = { low: '初级房卡', mid: '中级房卡', high: '高级房卡' };
+            const shopList = document.getElementById('shop-list');
+
+            ['low', 'mid', 'high'].forEach(level => {
+                const div = document.createElement('div');
+                div.className = 'card-box';
+                div.innerHTML = `
+                    <div>
+                        <h3>${names[level]}</h3>
+                        <p>价格: ${prices[level]} 秘宝</p>
+                        <p style="font-size:12px; color:#70e0e0; margin-top:5px;">已拥有: ${player.cards[level]} 张</p>
+                    </div>
+                    <button class="btn-buy" onclick="buyCard('${level}', ${prices[level]})">购买</button>
+                `;
+                shopList.appendChild(div);
+            });
+
+            function buyCard(level, price) {
+                let p = getPlayer();
+                if (p.treasures >= price) {
+                    p.treasures -= price;
+                    p.cards[level] += 1;
+                    p.cardExpiry[level] = Date.now() + 48 * 60 * 60 * 1000;
+                    savePlayer(p);
+                    alert(`购买成功！获得1张${names[level]}`);
+                    window.location.reload();
+                } else { alert("秘宝不足！"); }
+            }
+        } catch (error) {
+            // 如果读不到数据，给个提示防白屏
+            document.getElementById('shop-list').innerHTML = `<h2 style="color:red; text-align:center;">数据加载失败，请检查 data.js 是否存在并刷新。</h2>`;
+            console.error(error);
+        }
+    </script>
+</body>
+</html>
