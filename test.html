@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>真实资金池泡沫推演</title>
+</head>
+<body style="background: #111; color: #fff; font-family: monospace; padding: 20px;">
+    <h2>按 F12 打开控制台，查看真实的现金泡沫报告</h2>
+    <div id="result" style="white-space: pre-wrap; line-height: 1.6;"></div>
+
+    <script>
+        // ================= 设定 =================
+        const TOTAL_PLAYERS = 100;
+        const INIT_MONEY = 500;
+        const SIMULATE_WEEKS = 3;
+        const CARD_PRICE = { low: 10, mid: 50, high: 100 };
+
+        let players = [];
+        for (let i = 0; i < TOTAL_PLAYERS; i++) {
+            players.push({
+                id: i + 1,
+                money: INIT_MONEY,
+                cards: [], 
+                joinCount: 0,
+                totalPutIn: 0,
+                totalGetBack: 0,
+                cardsUsedToOpen: 0,
+                cardsExpired: 0, 
+                cardsReset: 0    
+            });
+        }
+
+        // 系统核心账本
+        let globalStats = {
+            totalRounds: 0,
+            totalCardsSold: 0, 
+            totalCardsIssued: 0, 
+            totalCardsUsed: 0,
+            // ⚠️ 核心泡沫数据：系统累计多印出来的钱
+            printedCash: 0, 
+            // ⚠️ 核心回收数据：系统没收第五名本金的钱
+            absorbedCash: 0
+        };
+
+        let reportText = "";
+
+        // ================= 时间流循环 =================
+        for (let week = 1; week <= SIMULATE_WEEKS; week++) {
+            
+            // 每周一：强制清空所有房卡
+            if (week > 1) {
+                players.forEach(p => {
+                    p.cardsReset += p.cards.length;
+                    p.cards = []; 
+                });
+                reportText += `\n--- 🗓️ 第${week}周周一 09:00，全服所有房卡已全部清零 ---\n`;
+            }
+
+            for (let day = 1; day <= 7; day++) {
+                let roundsToday = 210;
+
+                for (let r = 0; r < roundsToday; r++) {
+                    let currentTime = Date.now() + (week * 7 * 24 * 60 * 60 * 1000) + (day * 24 * 60 * 60 * 1000) + (r * 2 * 60 * 1000); 
+
+                    // 1. 检查【赢来的限时卡】是否过期
+                    players.forEach(p => {
+                        let validCards = [];
+                        p.cards.forEach(card => {
+                            if (card.expireTime && currentTime > card.expireTime) {
+                                p.cardsExpired++; 
+                            } else {
+                                validCards.push(card); 
+                            }
+                        });
+                        p.cards = validCards;
+                    });
+
+                    // 2. 取消满卡限制
+                    let eligiblePlayers = players.filter(p => p.money >= 10); 
+                    if (eligiblePlayers.length < 5) continue;
+
+                    let shuffled = [...eligiblePlayers].sort(() => 0.5 - Math.random());
+                    let roomPlayers = shuffled.slice(0, 5);
+
+                    let host = roomPlayers[0];
+                    let levels = ['low', 'mid', 'high'];
+                    let level = levels[Math.floor(Math.random() * 3)];
+                    let base = CARD_PRICE[level];
+
+                    // 3. 房主开房
+                    let hostCardIndex = host.cards.findIndex(c => c.level === level);
+                    if (hostCardIndex > -1) {
+                        host.cards.splice(hostCardIndex, 1);
+                        host.cardsUsedToOpen++;
+                        globalStats.totalCardsUsed++;
+                    } else {
+                        if (host.money >= base) {
+                            host.money -= base;
+                            host.cardsUsedToOpen++;
+                            globalStats.totalCardsSold++;
+                            globalStats.totalCardsUsed++;
+                        } else {
+                            continue; 
+                        }
+                    }
+
+                    // 4. 其他4人进房
+                    let otherPlayers = roomPlayers.slice(1);
+                    let validJoinPlayers = [];
+                    for (let p of otherPlayers) {
+                        if (p.money >= base) {
+                            p.money -= base;
+                            p.totalPutIn += base;
+                            p.joinCount++;
+                            validJoinPlayers.push(p);
+                        }
+                    }
+
+                    if (validJoinPlayers.length < 4) continue;
+
+                    globalStats.totalRounds++;
+                    let allRoomPlayers = [host, ...validJoinPlayers];
+                    host.joinCount++;
+
+                    // 5. 发奖
+                    let ranked = [...allRoomPlayers].sort(() => 0.5 - Math.random());
+                    
+                    for (let i = 0; i < 4; i++) {
+                        let p = ranked[i];
+                        let profitMultiplier = [0.016, 0.01, 0.008, 0.006][i];
+                        let profit = base * profitMultiplier;
+                        let reward = base + profit; // 拿回本金 + 利润
+                        
+                        p.money += reward;
+                        p.totalGetBack += reward;
+                        
+                        // 💡 记录系统多印出来的钱（仅利润部分）
+                        globalStats.printedCash += profit;
+                    }
+
+                    // 第五名得限时房卡，不退本金
+                    let fifth = ranked[4];
+                    // 💡 记录系统没收的本金
+                    globalStats.absorbedCash += base;
+
+                    let cardReward = Math.random() > 0.5 ? 1 : 2; 
+                    for(let c = 0; c < cardReward; c++) {
+                        fifth.cards.push({ 
+                            level: level, 
+                            expireTime: currentTime + 48 * 60 * 60 * 1000 
+                        });
+                        globalStats.totalCardsIssued++;
+                    }
+                }
+            }
+            reportText += generateWeeklyReport(week);
+        }
+
+        // ================= 生成报告（含现金泡沫） =================
+        function generateWeeklyReport(week) {
+            let totalMoney = 0;
+            players.forEach(p => { totalMoney += p.money; });
+
+            // 真正的市场泡沫 = 现在的总现金 - 初始总现金
+            let marketBubble = totalMoney - (TOTAL_PLAYERS * INIT_MONEY);
+
+            return `
+=============================================
+📊 第 ${week} 周 运营数据报告
+=============================================
+【💰 现金池现状】
+* 100人手里的秘宝总额: ${totalMoney.toFixed(2)} (初始50000)
+* 市场泡沫（冗余资金）: ${marketBubble > 0 ? '+' : ''}${marketBubble.toFixed(2)}
+* 当前状态: ${marketBubble > 5000 ? '🚨 严重通胀（泡沫），钱不值钱了' : (marketBubble < -5000 ? '📉 严重通缩，钱被系统抽干了' : '✅ 资金基本平衡，钱很值钱')}
+
+【🏦 系统真实印钞机数据】
+* 系统累计凭空多印的利润: ${globalStats.printedCash.toFixed(2)}
+* 系统累计没收第5名本金: ${globalStats.absorbedCash.toFixed(2)}
+* 系统净赚/净亏: ${(globalStats.absorbedCash - globalStats.printedCash).toFixed(2)} (正数代表系统赚了，负数代表系统亏了)
+
+---------------------------------------------
+            `;
+        }
+
+        let playerDetailsStr = players.map(p => {
+            return `玩家${p.id.toString().padStart(3, '0')} | 现金: ${p.money.toFixed(2).padStart(7)} | 参与: ${p.joinCount.toString().padStart(3)}次 | 累计投入: ${p.totalPutIn.toString().padStart(5)} | 累计收回: ${p.totalGetBack.toFixed(2).padStart(7)} | 开房消耗: ${p.cardsUsedToOpen.toString().padStart(3)}张 | 剩卡: ${p.cards.length.toString().padStart(3)}张`;
+        }).join('\n');
+
+        let finalOutput = `
+========== 🏁 真实资金池与泡沫推演 ==========
+【全服宏观大账本】
+* 总对局数: ${globalStats.totalRounds} 局
+
+${reportText}
+
+========== 👤 100人每个人最终明细（三周后） ==========
+${playerDetailsStr}
+`;
+        document.getElementById('result').innerText = finalOutput;
+    </script>
+</body>
+</html>
