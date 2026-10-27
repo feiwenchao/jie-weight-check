@@ -3,96 +3,217 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>游戏沙盘推演</title>
+    <title>经济沙盘推演</title>
     <script src="data.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
         .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; padding: 20px; display: flex; flex-direction: column; position: relative; }
+        
         .top-nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; position: relative; z-index: 2; border-bottom: 1px solid rgba(112,224,224,0.3); }
         .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
         .title { font-size: 18px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 8px rgba(112,224,224,0.5); }
         
         .content { padding: 20px 0; flex: 1; overflow-y: auto; position: relative; z-index: 2; }
         
-        /* 统计卡片 */
+        /* 数据卡片样式 */
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .stat-card {
             background: linear-gradient(135deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%);
-            border-radius: 8px; padding: 15px; margin-bottom: 15px;
-            border-left: 4px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+            border-radius: 8px; padding: 12px; border-left: 4px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
         }
-        .stat-card.warning { border-left-color: #ffb84d; }
-        .stat-card.danger { border-left-color: #ff5a5a; }
+        .stat-title { font-size: 12px; color: #aaa; margin-bottom: 5px; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
         
-        .stat-title { font-size: 14px; color: #aaa; margin-bottom: 8px; }
-        .stat-value { font-size: 24px; font-weight: bold; color: #fff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
-        .stat-desc { font-size: 12px; color: #ccc; margin-top: 5px; }
+        /* 控制按钮 */
+        .btn-action {
+            width: 100%; padding: 15px; margin-bottom: 15px; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer;
+            background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%);
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            text-shadow: 0 1px 2px #000; transition: 0.2s;
+        }
+        .btn-action:active { transform: scale(0.97); }
         
-        .analysis-box {
-            background: rgba(0,0,0,0.5); border: 1px solid #2b1c8a;
+        .log-box {
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(112,224,224,0.3);
             border-radius: 8px; padding: 15px; font-size: 13px; line-height: 1.6;
-            color: #ccc; margin-top: 20px;
+            color: #ccc; height: 250px; overflow-y: auto;
         }
-        .analysis-box strong { color: #70e0e0; }
+        .log-box strong { color: #70e0e0; }
+        .text-red { color: #ff5a5a; font-weight: bold; }
+        .text-green { color: #3cc44b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="mobile-container">
         <div class="top-nav">
             <div class="back-btn" onclick="window.location.href='menu.html'"></div>
-            <div class="title">📊 经济沙盘</div>
+            <div class="title">📊 经济沙盘推演</div>
             <div style="width:25px;"></div>
         </div>
         
-        <div class="content" id="sandboxContent">
-            <!-- JS 动态渲染 -->
+        <div class="content">
+            <!-- 当前状态显示 -->
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-title">全服现金池</div>
+                    <div class="stat-value" id="val-cash">50000.00</div>
+                </div>
+                <div class="stat-card" style="border-left-color: #ffb84d;">
+                    <div class="stat-title">全服房卡数</div>
+                    <div class="stat-value" id="val-cards">0</div>
+                </div>
+            </div>
+
+            <button class="btn-action" id="btn-run" onclick="runSimulationStep()">▶ 模拟下一周 (7天)</button>
+            <button class="btn-action" style="background: linear-gradient(90deg, #8a1c2b 0%, #c43c3c 100%);" onclick="resetSandbox()">🔄 重置沙盘数据</button>
+
+            <div class="log-box" id="log-box">
+                点击上方按钮开始推演...<br>
+                系统规则：每周一房卡清零，第5名不得本金只给卡。
+            </div>
         </div>
     </div>
 
     <script>
-        const data = getSandboxData();
-        const container = document.getElementById('sandboxContent');
+        // ================= 沙盘核心变量 =================
+        let sandboxState = {
+            week: 0,
+            totalCash: 50000, // 100人 * 500
+            totalCards: 0,
+            // 记录本周发生的流水
+            weekPrintedCash: 0, // 系统印的钱（前4名利润）
+            weekAbsorbedCash: 0, // 系统吞的钱（第5名本金）
+            weekExpiredCards: 0, // 本周过期卡
+            weekResetCards: 0   // 本周清零卡
+        };
 
-        // 判断状态
-        let cashStatus = '正常';
-        let cashClass = '';
-        if (data.currentCash < 100) { cashStatus = '濒临破产'; cashClass = 'danger'; }
-        else if (data.currentCash < 300) { cashStatus = '资金紧张'; cashClass = 'warning'; }
+        const TOTAL_PLAYERS = 100;
+        const CARD_PRICE = { low: 10, mid: 50, high: 100 };
 
-        let bubble = data.currentCash - 500; // 相比初始500的差值
+        // 初始化一些模拟玩家的数据（简化版，只记总数）
+        let mockPlayers = Array(TOTAL_PLAYERS).fill({}).map((_, i) => ({
+            id: i, 
+            cards: [] // { level, expireWeek }
+        }));
 
-        container.innerHTML = `
-            <div class="stat-card ${cashClass}">
-                <div class="stat-title">我的当前现金（秘宝）</div>
-                <div class="stat-value">${data.currentCash.toFixed(2)}</div>
-                <div class="stat-desc" style="color:${bubble > 0 ? '#3cc44b' : '#ff5a5a'};">
-                    ${bubble > 0 ? '▲ 相比初始多了 ' + bubble.toFixed(2) : '▼ 相比初始少了 ' + Math.abs(bubble).toFixed(2)}
+        function runSimulationStep() {
+            sandboxState.week++;
+            sandboxState.weekPrintedCash = 0;
+            sandboxState.weekAbsorbedCash = 0;
+            sandboxState.weekExpiredCards = 0;
+            sandboxState.weekResetCards = 0;
+
+            // 1. 周一清零逻辑（如果当前是第二周及以后）
+            if (sandboxState.week > 1) {
+                mockPlayers.forEach(p => {
+                    sandboxState.weekResetCards += p.cards.length;
+                    sandboxState.totalCards -= p.cards.length;
+                    p.cards = []; // 全部没收
+                });
+            }
+
+            // 2. 模拟这一周的 210 * 7 = 1470 局比赛
+            // 为了不卡死，我们假设每天能开满局，快速算总账
+            let roundsThisWeek = 1470; 
+            
+            for (let r = 0; r < roundsThisWeek; r++) {
+                // 假设随机房间等级（为了好算，按概率平均，初级占80%）
+                let level = Math.random() > 0.5 ? 'low' : (Math.random() > 0.5 ? 'mid' : 'high');
+                let base = CARD_PRICE[level];
+
+                // 收入（前4名的利润，约本金的一小部分）
+                let profit = base * 0.01; // 平均按1%算
+                sandboxState.weekPrintedCash += profit * 4;
+
+                // 支出（第5名被吞的本金）
+                sandboxState.weekAbsorbedCash += base;
+
+                // 第5名获得的房卡
+                let cardReward = Math.random() > 0.5 ? 1 : 2;
+                // 随机找个玩家塞给他
+                let luckyPlayer = mockPlayers[Math.floor(Math.random() * TOTAL_PLAYERS)];
+                
+                for(let c = 0; c < cardReward; c++) {
+                    luckyPlayer.cards.push({ level: level, expireWeek: sandboxState.week + 1 });
+                    sandboxState.totalCards++;
+                }
+            }
+
+            // 3. 结算本周资金池
+            // 资金变化 = + 印的钱 - 吞的钱
+            let cashChange = sandboxState.weekPrintedCash - sandboxState.weekAbsorbedCash;
+            sandboxState.totalCash += cashChange;
+
+            // 4. 计算过期的卡（48小时 = 约14局，跨周一定过期）
+            // 这里为了直观，把过期逻辑合并到周一清零里
+            mockPlayers.forEach(p => {
+                let validCards = [];
+                p.cards.forEach(card => {
+                    if (card.expireWeek <= sandboxState.week) {
+                        sandboxState.weekExpiredCards++;
+                        sandboxState.totalCards--;
+                    } else {
+                        validCards.push(card);
+                    }
+                });
+                p.cards = validCards;
+            });
+
+            // 5. 更新 UI 和 日志
+            updateUI();
+            addLog();
+        }
+
+        function updateUI() {
+            document.getElementById('val-cash').innerText = sandboxState.totalCash.toFixed(2);
+            document.getElementById('val-cash').style.color = sandboxState.totalCash < 20000 ? '#ff5a5a' : '#fff';
+            document.getElementById('val-cards').innerText = sandboxState.totalCards;
+        }
+
+        function addLog() {
+            const logBox = document.getElementById('log-box');
+            let cashDiff = sandboxState.weekPrintedCash - sandboxState.weekAbsorbedCash;
+            
+            let logHtml = `
+                <div style="margin-bottom: 15px; border-bottom: 1px dashed #333; padding-bottom: 10px;">
+                    <strong>📅 第 ${sandboxState.week} 周结束</strong><br>
+                    • 系统多印的利润: <span class="text-green">+${sandboxState.weekPrintedCash.toFixed(2)}</span><br>
+                    • 系统没收第5名本金: <span class="text-red">-${sandboxState.weekAbsorbedCash.toFixed(2)}</span><br>
+                    • 资金池净变化: <span style="color:${cashDiff > 0 ? '#3cc44b' : '#ff5a5a'}">${cashDiff > 0 ? '+' : ''}${cashDiff.toFixed(2)}</span><br>
+                    • 周一房卡清零: ${sandboxState.weekResetCards} 张<br>
+                    • 48小时过期卡: ${sandboxState.weekExpiredCards} 张<br>
+                    <strong>当前现金池: ${sandboxState.totalCash.toFixed(2)}</strong>
                 </div>
-            </div>
+            `;
+            
+            logBox.innerHTML = logHtml + logBox.innerHTML;
 
-            <div class="stat-card">
-                <div class="stat-title">我的房卡库存</div>
-                <div class="stat-value">${data.currentCards} 张</div>
-                <div class="stat-desc">每周一清零，赢来的卡48小时过期</div>
-            </div>
+            // 动态提示（消泡机制）
+            if (sandboxState.totalCash < 10000) {
+                logBox.innerHTML = `<div class="text-red" style="text-align:center; margin-bottom:10px;">🚨 警告：现金池触底！玩家即将破产，建议修改第5名返还50%本金。</div>` + logBox.innerHTML;
+                document.getElementById('btn-run').disabled = true;
+                document.getElementById('btn-run').innerText = "系统已破产，请重置";
+            }
+        }
 
-            <div class="stat-card">
-                <div class="stat-title">已完成对局</div>
-                <div class="stat-value">${data.totalRounds} 局</div>
-                <div class="stat-desc">累计投入: ${data.totalPutIn} 秘宝 | 累计收回: ${data.totalGetBack.toFixed(2)} 秘宝</div>
-            </div>
-
-            <div class="analysis-box">
-                <strong>💡 系统分析报告（基于当前数据）：</strong><br><br>
-                你现在的现金状态是：<strong style="color:${data.currentCash < 100 ? '#ff5a5a' : '#3cc44b'};">${cashStatus}</strong>。<br>
-                ${data.totalGetBack > data.totalPutIn 
-                    ? '目前你的收入大于投入，说明你在赢钱。但你要注意，赢来的房卡一旦过期或周一清零，你的隐形资产就会蒸发。' 
-                    : '目前你的投入大于收入。因为系统没没收了第5名的本金，长期来看现金是持续减少的。'}
-                <br><br>
-                <strong>📈 泡沫说明：</strong><br>
-                当前市场里，系统并没有凭空印钱。你手里的钱变少，是因为被系统当作“第5名惩罚”收走了。如果想让钱更值钱，建议把第5名的规则改成“退还全部本金+发1张卡”，这样市场就不会通缩。
-            </div>
-        `;
+        function resetSandbox() {
+            sandboxState = {
+                week: 0,
+                totalCash: 50000,
+                totalCards: 0,
+                weekPrintedCash: 0,
+                weekAbsorbedCash: 0,
+                weekExpiredCards: 0,
+                weekResetCards: 0
+            };
+            mockPlayers = Array(TOTAL_PLAYERS).fill({}).map((_, i) => ({ id: i, cards: [] }));
+            
+            document.getElementById('log-box').innerHTML = `点击上方按钮开始推演...<br>系统规则：每周一房卡清零，第5名不得本金只给卡。`;
+            document.getElementById('btn-run').disabled = false;
+            document.getElementById('btn-run').innerText = "▶ 模拟下一周 (7天)";
+            updateUI();
+        }
     </script>
 </body>
 </html>
