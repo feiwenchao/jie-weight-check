@@ -112,7 +112,7 @@
                 } else {
                     isRaceStarted = true;
                     updateHistoryStartTime(Date.now()); // 记录开局时间
-                    statusText.innerText = "人满，比赛准备开始！";
+                    statusText.innerText = "赛车手均已准备就绪，比赛开始！";
                     setTimeout(() => {
                         startRaceCountdown(10); // 满员后等1秒，开始10秒倒计时
                     }, 1000);
