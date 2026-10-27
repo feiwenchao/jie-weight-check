@@ -19,7 +19,7 @@
             padding: 15px; margin-bottom: 12px; border-radius: 8px; 
             border-left: 4px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
             display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; /* 所有状态都显示手型 */
+            cursor: pointer;
             transition: all 0.2s;
         }
         .history-item:active { transform: scale(0.98); }
@@ -58,7 +58,6 @@
         </div>
         <div class="content" id="historyList"></div>
 
-        <!-- 查看明细的弹窗 -->
         <div class="modal-overlay" id="detailModal">
             <div class="modal-box">
                 <div class="modal-title">比赛结算明细</div>
@@ -99,21 +98,19 @@
                     </div>
                 `;
 
-                // 🌟 点击逻辑：无论是进行中还是已完成，都允许点击
+                // 点击逻辑：区分进行中和已完成
                 div.onclick = () => {
                     if (isOngoing) {
-                        // 如果是“进行中”，把当前房间信息写入缓存，跳转回 game.html
+                        // 🌟 修复：重连逻辑，补齐基本数据（去掉没用的 endTime）
                         localStorage.setItem('isReconnect', 'true');
                         localStorage.setItem('currentRoom', JSON.stringify({ 
                             id: item.roomId, 
                             level: item.level, 
-                            initialPlayers: 1,
-                            // 传入之前记录的比赛结束时间或者标记
-                            endTime: item.endTime || (Date.now() + 120000) 
+                            initialPlayers: 1
                         }));
                         window.location.href = "game.html";
                     } else {
-                        // 如果是“已完成”，弹出结算明细
+                        // 已完成：弹出结算明细
                         if (item.allPlayers && item.allPlayers.length > 0) {
                             const modalList = document.getElementById('modalList');
                             modalList.innerHTML = '';
