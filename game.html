@@ -86,7 +86,24 @@
                     playerCount++;
                 }
             }
-
+<!-- 在 <script> 内，renderPlayerList() 方法的上面，加上这个刷新资产展示的方法 -->
+function updateMyAssets() {
+    let p = getPlayer();
+    let now = Date.now();
+    let cardStr = "";
+    ['low', 'mid', 'high'].forEach(lv => {
+        let tempArr = p.cards[lv].temp || [];
+        // 过滤并显示最近的过期时间
+        let validTemps = tempArr.filter(e => e > now);
+        if (p.cards[lv].perm > 0 || validTemps.length > 0) {
+            let name = lv === 'low' ? '初' : (lv === 'mid' ? '中' : '高');
+            cardStr += `${name}卡: ${p.cards[lv].perm}张(永) + ${validTemps.length}张(限) | `;
+        }
+    });
+    document.getElementById('myCardsDisplay').innerText = `秘宝: ${p.treasures.toFixed(1)} | 券: ${p.tickets.toFixed(1)} | ${cardStr}`;
+}
+updateMyAssets();
+setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
             function renderPlayerList() {
                 playerList.innerHTML = ''; 
                 for (let i = 0; i < allPlayers.length; i++) {
