@@ -6,6 +6,7 @@
     <title>游戏房间</title>
     <script src="data.js"></script>
     <style>
+        /* 保持之前的样式 */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
         .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; padding: 20px; display: flex; flex-direction: column; position: relative; }
@@ -25,6 +26,7 @@
         .result-rank-list li { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 13px; text-shadow: 0 1px 1px #000; }
         .result-rank-list li:last-child { border-bottom: none; }
         .result-rank-list li.me { color: #70e0e0; font-weight: bold; }
+        .task-msg { text-align: center; color: #ffb84d; font-size: 13px; margin-top: 10px; font-weight: bold; display: none; }
         .btn-back-menu { width: 100%; padding: 12px; background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%); color: white; border: none; border-radius: 5px; font-size: 14px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); margin-top: 15px; text-shadow: 0 1px 2px #000;}
     </style>
 </head>
@@ -32,42 +34,37 @@
     <div class="mobile-container">
         <div class="top-nav">
             <div class="back-btn" onclick="window.location.href='lobby.html'"></div>
-            <h2 id="roomTitle" style="font-size:16px; margin:0; color:#70e0e0;">房间号: ------</h2>
+            <h2 id="roomTitle" style="font-size:16px; margin:0; color:#70e0e0;">房间号: 读取中</h2>
             <div style="width:25px;"></div>
         </div>
-        <div style="text-align: center; font-size: 12px; color: #aaa; margin-bottom: 5px; position: relative; z-index: 2;">
-    <span id="myCardsDisplay"></span>
-</div>
-        
         <div class="header" style="border-bottom:none; padding-top:0;">
-            <p id="roomLevel" style="font-size: 12px; color:#aaa;">等级: 初级房</p>
+            <p id="roomLevel" style="font-size: 12px; color:#aaa;">等级: 读取中</p>
         </div>
         <div class="player-list" id="playerList"></div>
-        <div class="status-text" id="statusText">正在读取房间信息...</div>
+        <div class="status-text" id="statusText">正在加载...</div>
+        
         <div id="result-area">
             <div class="result-title" id="mainResultText"></div>
+            <div class="task-msg" id="taskMsg"></div>
             <ul class="result-rank-list" id="rankListText"></ul>
             <button class="btn-back-menu" onclick="window.location.href='lobby.html'">返回房间大厅</button>
         </div>
     </div>
 
     <script>
-        const room = JSON.parse(localStorage.getItem('currentRoom'));
+        let room = null;
+        try { room = JSON.parse(localStorage.getItem('currentRoom')); } catch(e) {}
+        
         if (!room) { 
+            alert("未找到房间数据，返回菜单。");
             window.location.href = "menu.html"; 
         } else {
             document.getElementById('roomTitle').innerText = `房间号: ${room.id}`;
             document.getElementById('roomLevel').innerText = `等级: ${room.level === 'low' ? '初级房' : room.level === 'mid' ? '中级房' : '高级房'}`;
             
-            // 判断是不是从记录重连来的
             const isReconnect = localStorage.getItem('isReconnect') === 'true';
-            const history = getHistory();
-            const currentMatch = history.find(h => h.status === '正在进行中' && h.roomId === room.id);
-            
-            // 如果是新开一局，记录历史
-            if (!isReconnect && !currentMatch) {
-                addOngoingHistory(room);
-            }
+            // 兼容历史记录
+            try { addOngoingHistory(room); } catch(e) {}
             
             const maxPlayers = 5;
             let playerCount = 1;
@@ -76,8 +73,6 @@
             const statusText = document.getElementById('statusText');
             
             let allPlayers = [{ name: getMyName(), isMe: true }];
-            
-            // 如果是重连，直接满员
             let botsInRoom = isReconnect ? 4 : (parseInt(room.initialPlayers) || 1); 
             
             for (let i = 0; i < botsInRoom; i++) {
@@ -86,28 +81,10 @@
                     playerCount++;
                 }
             }
-<!-- 在 <script> 内，renderPlayerList() 方法的上面，加上这个刷新资产展示的方法 -->
-function updateMyAssets() {
-    let p = getPlayer();
-    let now = Date.now();
-    let cardStr = "";
-    ['low', 'mid', 'high'].forEach(lv => {
-        let tempArr = p.cards[lv].temp || [];
-        // 过滤并显示最近的过期时间
-        let validTemps = tempArr.filter(e => e > now);
-        if (p.cards[lv].perm > 0 || validTemps.length > 0) {
-            let name = lv === 'low' ? '初' : (lv === 'mid' ? '中' : '高');
-            cardStr += `${name}卡: ${p.cards[lv].perm}张(永) + ${validTemps.length}张(限) | `;
-        }
-    });
-    document.getElementById('myCardsDisplay').innerText = `秘宝: ${p.treasures.toFixed(1)} | 券: ${p.tickets.toFixed(1)} | ${cardStr}`;
-}
-updateMyAssets();
-setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
+
             function renderPlayerList() {
                 playerList.innerHTML = ''; 
-                for (let i = 0; i < allPlayers.length; i++) {
-                    const p = allPlayers[i];
+                allPlayers.forEach(p => {
                     const div = document.createElement('div');
                     div.className = 'player-item';
                     if (p.isMe) {
@@ -116,7 +93,7 @@ setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
                         div.innerHTML = `<span>🤖 ${p.name}</span> <span style="color: #aaa;">已准备</span>`;
                     }
                     playerList.appendChild(div);
-                }
+                });
                 for (let i = playerCount; i < maxPlayers; i++) {
                     const div = document.createElement('div');
                     div.className = 'player-item';
@@ -128,22 +105,10 @@ setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
             }
             renderPlayerList();
 
-            // 如果是重连，走重连逻辑
             if (isReconnect) {
                 localStorage.removeItem('isReconnect'); 
-                if (currentMatch && currentMatch.startTime) {
-                    let elapsed = Math.floor((Date.now() - currentMatch.startTime) / 1000);
-                    let remaining = 10 - elapsed; // 测试阶段 10 秒，线上改 120
-                    if (remaining > 0) {
-                        startRaceCountdown(remaining);
-                    } else {
-                        calculateResults(); 
-                    }
-                } else {
-                    startRaceCountdown(10);
-                }
+                startRaceCountdown(10); // 重连直接倒计时
             } else {
-                // 新开赛逻辑：进人，满了开始倒计时
                 function robotEnter() {
                     if (isRaceStarted) return;
                     if (playerCount < maxPlayers) {
@@ -151,12 +116,10 @@ setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
                         allPlayers.push({ name: generateRacerName(), isMe: false });
                         renderPlayerList();
                         if (playerCount < maxPlayers) {
-                            setTimeout(robotEnter, 1000); 
+                            setTimeout(robotEnter, 800); 
                         } else {
                             isRaceStarted = true;
-                            // 记录开赛时间
-                            updateHistoryStartTime(Date.now());
-                            startRaceCountdown(10); 
+                            startRaceCountdown(10); // 满人开始倒计时
                         }
                     }
                 }
@@ -179,62 +142,72 @@ setInterval(updateMyAssets, 5000); // 每5秒刷新一次，实时检查过期
             }
 
             function calculateResults() {
-                const p = getPlayer();
-                
-                allPlayers.forEach(player => {
-                    player.speed = Math.random() * 20 + 80; 
-                });
-                allPlayers.sort((a, b) => b.speed - a.speed);
-                const myRank = allPlayers.findIndex(player => player.isMe) + 1;
-                
-                let allRewards = [0, 0, 0, 0, 0];
-                if (room.level === 'high') allRewards = [116, 110, 108, 106, 0];
-                else if (room.level === 'mid') allRewards = [51.6, 51, 50.8, 50.6, 0];
-                else allRewards = [10.16, 10.1, 10.08, 10.06, 0];
+                try {
+                    const p = getPlayer();
+                    
+                    allPlayers.forEach(player => {
+                        player.speed = Math.random() * 20 + 80; 
+                    });
+                    allPlayers.sort((a, b) => b.speed - a.speed);
+                    const myRank = allPlayers.findIndex(player => player.isMe) + 1;
+                    
+                    let allRewards = [0, 0, 0, 0, 0];
+                    if (room.level === 'high') allRewards = [116, 110, 108, 106, 0];
+                    else if (room.level === 'mid') allRewards = [51.6, 51, 50.8, 50.6, 0];
+                    else allRewards = [10.16, 10.1, 10.08, 10.06, 0];
 
-                const fifthPlaceCards = Math.random() > 0.5 ? 1 : 2;
-                let myReward = allRewards[myRank - 1];
-                let rewardText = "";
+                    const fifthPlaceCards = Math.random() > 0.5 ? 1 : 2;
+                    let myReward = allRewards[myRank - 1];
+                    let rewardText = "";
+                    let basePrice = room.level === 'low' ? 10 : (room.level === 'mid' ? 50 : 100);
 
-                if (myRank < 5) {
-                    p.treasures += myReward;
-                    savePlayer(p);
-                    rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
-                } else {
-                    p.cards[room.level] += fifthPlaceCards;
-                    p.cardExpiry[room.level] = Date.now() + 48 * 60 * 60 * 1000;
-                    savePlayer(p);
-                    rewardText = `${fifthPlaceCards} 张房卡`; 
-                }
-
-                let fullListForHistory = allPlayers.map((player, index) => {
-                    let rStr = "";
-                    if (index < 4) {
-                        rStr = `${allRewards[index].toFixed(2).replace(/\.?0+$/, '')} 秘宝`;
+                    if (myRank < 5) {
+                        p.treasures += myReward;
+                        savePlayer(p);
+                        rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
                     } else {
-                        rStr = `${fifthPlaceCards} 张房卡`;
+                        if (!p.cards[room.level].temp) p.cards[room.level].temp = [];
+                        let now = Date.now();
+                        for(let c=0; c<fifthPlaceCards; c++) {
+                            p.cards[room.level].temp.push(now + 48 * 60 * 60 * 1000);
+                        }
+                        savePlayer(p);
+                        rewardText = `${fifthPlaceCards} 张房卡`; 
                     }
-                    return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
-                });
 
-                completeOngoingHistory(myRank, rewardText, fullListForHistory);
+                    let fullListForHistory = allPlayers.map((player, index) => {
+                        let rStr = index < 4 ? `${allRewards[index].toFixed(2).replace(/\.?0+$/, '')} 秘宝` : `${fifthPlaceCards} 张房卡`;
+                        return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
+                    });
+                    
+                    try { completeOngoingHistory(myRank, rewardText, fullListForHistory); } catch(e) {}
 
-                statusText.style.display = "none";
-                document.getElementById('result-area').style.display = "block";
+                    statusText.style.display = "none";
+                    document.getElementById('result-area').style.display = "block";
 
-                let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
-                document.getElementById('mainResultText').innerHTML = mainText;
+                    let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
+                    document.getElementById('mainResultText').innerHTML = mainText;
 
-                let rankListHtml = "";
-                fullListForHistory.forEach(item => {
-                    let isMeClass = item.isMe ? 'class="me"' : '';
-                    rankListHtml += `<li ${isMeClass}>
-                        <span>第${item.rank}名: ${item.name} ${item.isMe ? '(我)' : ''}</span>
-                        <span>${item.reward}</span>
-                    </li>`;
-                });
-                
-                document.getElementById('rankListText').innerHTML = rankListHtml;
+                    // 任务结算
+                    let isHostUsedTaskCard = false; // 这里简单假设房主每次都在用任务卡做测试
+                    let taskResult = checkAndClearTask(basePrice, isHostUsedTaskCard);
+                    if (taskResult) {
+                        const taskMsgEl = document.getElementById('taskMsg');
+                        taskMsgEl.style.display = 'block';
+                        taskMsgEl.innerText = taskResult.msg;
+                        if (taskResult.success) taskMsgEl.style.color = '#3cc44b';
+                    }
+
+                    let rankListHtml = "";
+                    fullListForHistory.forEach(item => {
+                        let isMeClass = item.isMe ? 'class="me"' : '';
+                        rankListHtml += `<li ${isMeClass}><span>第${item.rank}名: ${item.name} ${item.isMe ? '(我)' : ''}</span><span>${item.reward}</span></li>`;
+                    });
+                    
+                    document.getElementById('rankListText').innerHTML = rankListHtml;
+                } catch (err) {
+                    alert("结算出错：" + err.message);
+                }
             }
         }
     </script>
