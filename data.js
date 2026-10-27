@@ -63,3 +63,36 @@ function updateHistoryStartTime(startTime) {
     }
     localStorage.setItem('matchHistory', JSON.stringify(history));
 }
+// ================= 沙盘测试数据抓取 =================
+function getSandboxData() {
+    let p = getPlayer();
+    let history = getHistory();
+    let currentCash = p.treasures;
+    let currentCards = p.cards.low + p.cards.mid + p.cards.high;
+    
+    // 根据真实历史记录，粗略计算这3周的流水
+    let totalRounds = history.filter(h => h.status === '已完成').length;
+    let totalPutIn = 0;
+    let totalGetBack = 0;
+    
+    // 这里为了演示，假设每局初级扣10，中级扣50，高级扣100
+    history.forEach(h => {
+        if (h.status === '已完成' && h.rank !== '-') {
+            let base = h.level === 'low' ? 10 : (h.level === 'mid' ? 50 : 100);
+            totalPutIn += base;
+            // 如果没有拿到秘宝（第5名），算作0收入
+            if (h.rewardText.includes('秘宝')) {
+                totalGetBack += parseFloat(h.rewardText);
+            }
+        }
+    });
+
+    return {
+        currentCash,
+        currentCards,
+        totalRounds,
+        totalPutIn,
+        totalGetBack,
+        isBankrupt: currentCash < 100 // 判断是否快破产
+    };
+}
