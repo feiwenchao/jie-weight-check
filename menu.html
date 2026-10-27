@@ -9,67 +9,108 @@
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
         
+        /* 手机屏幕容器 */
         .mobile-container {
             width: 100%; max-width: 430px; height: 100vh; max-height: 932px;
             background-color: #040e28; background-image: url('menu.png');
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; position: relative; overflow: hidden;
         }
+        
+        /* 背景赛车图 */
         .mobile-container::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url('menu-car.jpg'); background-size: 100% auto;
             background-position: center; background-repeat: no-repeat; z-index: 0; opacity: 0.3; pointer-events: none;
         }
 
-        .top-bar { padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 2; }
-        .back-btn { width: 30px; height: 30px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+        /* 顶部导航栏 */
+        .top-bar { 
+            padding: 20px 30px; display: flex; justify-content: space-between; align-items: flex-start; 
+            position: relative; z-index: 2; 
+        }
         
-        .top-right { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.4); padding: 8px 15px; border-radius: 20px; border: 1px solid rgba(112,224,224,0.3); }
+        /* 返回按钮 */
+        .back-btn { 
+            width: 30px; height: 30px; cursor: pointer; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); 
+            background-size: contain; background-repeat: no-repeat; 
+        }
+        
+        /* 顶部右侧资产面板 */
+        .top-right { 
+            display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+            background: rgba(0,0,0,0.5); padding: 8px 15px; border-radius: 8px; 
+            border: 1px solid rgba(112,224,224,0.3); 
+        }
         .wallet { font-size: 14px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 5px rgba(112,224,224,0.5); }
-        .cart-icon { width: 24px; height: 24px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2370e0e0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'%3E%3C/circle%3E%3Ccircle cx='20' cy='21' r='1'%3E%3C/circle%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'%3E%3C/path%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; transition: transform 0.2s; }
-        .cart-icon:active { transform: scale(0.8); }
+        .wallet-ticket { font-size: 12px; color: #ffb84d; font-weight: bold; }
 
-        .welcome-title { text-align: center; font-size: 22px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(255, 50, 50, 0.8); margin-top: 10px; letter-spacing: 2px; position: relative; z-index: 2; }
+        /* 欢迎语 */
+        .welcome-title { 
+            text-align: center; font-size: 22px; font-weight: bold; color: #fff; 
+            text-shadow: 0 0 10px rgba(255, 50, 50, 0.8); margin-top: 10px; 
+            letter-spacing: 2px; position: relative; z-index: 2; 
+        }
         
-        .car-showcase { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; z-index: 2; }
-        .car-showcase img { width: 100%; max-width: 350px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)); animation: float 3s ease-in-out infinite; }
+        /* 赛车展示区 */
+        .car-showcase { 
+            flex: 1; display: flex; justify-content: center; align-items: center; 
+            padding: 20px; position: relative; z-index: 2; 
+        }
+        .car-showcase img { 
+            width: 100%; max-width: 350px; object-fit: contain; 
+            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)); 
+            animation: float 3s ease-in-out infinite; 
+        }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         
-        /* 修改了 padding 底部距离，让 4 个按钮能放得下 */
-        .button-group { padding: 0 30px 30px 30px; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2; }
+        /* 底部按钮区 */
+        .button-group { 
+            padding: 0 30px 30px 30px; display: flex; flex-direction: column; 
+            gap: 12px; position: relative; z-index: 2; 
+        }
         
+        /* 菜单按钮基础样式 */
         .menu-btn {
             width: 100%; padding: 15px 20px; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer;
             display: flex; justify-content: space-between; align-items: center; transition: all 0.2s ease;
             clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8); box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         .menu-btn:active { transform: scale(0.97); }
 
+        /* 三种颜色的按钮 */
         .menu-btn.create { background: linear-gradient(135deg, rgba(26, 41, 128, 0.8) 0%, rgba(38, 208, 206, 0.6) 100%); border-left: 4px solid #26d0ce; }
         .menu-btn.join { background: linear-gradient(135deg, rgba(128, 0, 0, 0.8) 0%, rgba(255, 75, 43, 0.6) 100%); border-left: 4px solid #ff4b2b; }
         .menu-btn.history { background: linear-gradient(135deg, rgba(58, 28, 113, 0.8) 0%, rgba(215, 109, 119, 0.6) 100%); border-left: 4px solid #d76d77; }
         .menu-btn.sandbox { background: linear-gradient(135deg, rgba(43, 28, 138, 0.8) 0%, rgba(75, 60, 196, 0.6) 100%); border-left: 4px solid #4b3cc4; }
-
+        
         .arrow { font-size: 18px; color: #fff; opacity: 0.7; }
     </style>
 </head>
 <body>
     <div class="mobile-container">
         
-     <!-- 找到 menu.html 里的 top-right -->
-<div class="top-right" style="flex-direction: column; align-items: flex-end; padding: 5px 10px;">
-    <div class="wallet" id="walletInfo" style="font-size: 14px;">秘宝: 0</div>
-    <div class="wallet" id="ticketInfo" style="font-size: 12px; color: #ffb84d;">通兑券: 0</div>
-</div>
+        <!-- 顶部栏 -->
+        <div class="top-bar">
+            <div class="back-btn" onclick="window.location.href='index.html'"></div>
+            <!-- 资产面板 -->
+            <div class="top-right">
+                <div class="wallet" id="walletInfo">秘宝: 0.00</div>
+                <div class="wallet-ticket" id="ticketInfo">通兑券: 0</div>
+            </div>
         </div>
 
+        <!-- 欢迎语 -->
         <div class="welcome-title">欢迎来到超级赛车竞速！</div>
         
-        <div class="car-showcase"><img src="menu-car.jpg" alt="赛车"></div>
+        <!-- 中间赛车图 -->
+        <div class="car-showcase">
+            <img src="menu-car.jpg" alt="赛车">
+        </div>
         
-        <!-- 只有一个按钮组，包含四个按钮 -->
+        <!-- 底部按钮组 -->
         <div class="button-group">
             <button class="menu-btn create" onclick="window.location.href='create.html'">
                 <span>创建比赛</span>
@@ -83,7 +124,6 @@
                 <span>查看比赛记录</span>
                 <span class="arrow">➔</span>
             </button>
-            <!-- 沙盘测试入口 -->
             <button class="menu-btn sandbox" onclick="window.location.href='sandbox.html'">
                 <span>📊 经济沙盘测试</span>
                 <span class="arrow">➔</span>
@@ -92,13 +132,14 @@
     </div>
 
     <script>
-    try {
-        const p = getPlayer();
-        if(p) { 
-            document.getElementById('walletInfo').innerText = `秘宝: ${p.treasures.toFixed(2)}`; 
-            document.getElementById('ticketInfo').innerText = `通兑券: ${(p.tickets || 0).toFixed(0)}`;
-        }
-    } catch(e) { console.log("数据读取失败"); }
-</script>
+        // 安全读取数据
+        try {
+            const p = getPlayer();
+            if(p) { 
+                document.getElementById('walletInfo').innerText = `秘宝: ${p.treasures.toFixed(2)}`; 
+                document.getElementById('ticketInfo').innerText = `通兑券: ${(p.tickets || 0).toFixed(0)}`;
+            }
+        } catch(e) { console.log("数据读取失败", e); }
+    </script>
 </body>
 </html>
