@@ -58,12 +58,11 @@
 <body>
     <div class="mobile-container">
         
-        <div class="top-bar">
-            <div class="back-btn" onclick="window.location.href='index.html'"></div>
-            <div class="top-right">
-                <div class="wallet" id="walletInfo">0 秘宝</div>
-                <div class="cart-icon" onclick="window.location.href='shop.html'"></div>
-            </div>
+     <!-- 找到 menu.html 里的 top-right -->
+<div class="top-right" style="flex-direction: column; align-items: flex-end; padding: 5px 10px;">
+    <div class="wallet" id="walletInfo" style="font-size: 14px;">秘宝: 0</div>
+    <div class="wallet" id="ticketInfo" style="font-size: 12px; color: #ffb84d;">通兑券: 0</div>
+</div>
         </div>
 
         <div class="welcome-title">欢迎来到超级赛车竞速！</div>
@@ -93,10 +92,13 @@
     </div>
 
     <script>
-        try {
-            const p = getPlayer();
-            if(p) { document.getElementById('walletInfo').innerText = `${p.treasures} 秘宝`; }
-        } catch(e) { console.log("数据读取失败"); }
-    </script>
+    try {
+        const p = getPlayer();
+        if(p) { 
+            document.getElementById('walletInfo').innerText = `秘宝: ${p.treasures.toFixed(2)}`; 
+            document.getElementById('ticketInfo').innerText = `通兑券: ${(p.tickets || 0).toFixed(0)}`;
+        }
+    } catch(e) { console.log("数据读取失败"); }
+</script>
 </body>
 </html>
