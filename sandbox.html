@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>经济沙盘推演</title>
+    <title>经济沙盘推演(含通兑券)</title>
     <script src="data.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
@@ -12,328 +12,360 @@
         .mobile-container { 
             width: 100%; max-width: 430px; height: 100vh; 
             background-color: #040e28; background-image: url('menu.png'); 
-            background-size: cover; padding: 20px; display: flex; flex-direction: column; position: relative; 
+            background-size: cover; padding: 15px; display: flex; flex-direction: column; position: relative; 
         }
         
         /* 顶部导航 */
         .top-nav { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding-bottom: 10px; position: relative; z-index: 2; 
-            border-bottom: 1px solid rgba(112,224,224,0.3); 
+            padding-bottom: 10px; margin-bottom: 10px; position: relative; z-index: 2; 
+            border-bottom: 1px solid rgba(112,224,224,0.3); flex-shrink: 0;
         }
         .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
         .title { font-size: 18px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 8px rgba(112,224,224,0.5); }
         
+        /* 可滑动的内容区 */
+        .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 20px; position: relative; z-index: 2; }
+        
         /* 规则面板 */
         .rules-panel {
-            background: rgba(0,0,0,0.5); border: 1px solid rgba(112,224,224,0.3);
-            border-radius: 6px; margin-top: 10px; padding: 10px;
-            font-size: 12px; color: #ccc; position: relative; z-index: 2;
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(112,224,224,0.3);
+            border-radius: 6px; padding: 10px; font-size: 12px; color: #ccc; margin-bottom: 15px;
         }
-        .rules-panel summary {
-            cursor: pointer; color: #ffb84d; font-weight: bold; font-size: 13px;
-            outline: none; user-select: none;
+        .rules-panel summary { cursor: pointer; color: #ffb84d; font-weight: bold; font-size: 13px; outline: none; }
+        .rules-panel ul { margin-top: 8px; padding-left: 15px; line-height: 1.6; }
+        
+        /* 数据卡片 */
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card {
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%);
+            border-radius: 8px; padding: 12px; border-left: 4px solid #70e0e0; box-shadow: 0 4px 6px rgba(0,0,0,0.4);
         }
-        .rules-panel ul {
-            margin-top: 8px; padding-left: 15px; line-height: 1.6;
-        }
-
-        /* 按钮样式 */
-        .btn-group { display: flex; gap: 10px; margin: 15px 0; position: relative; z-index: 2; }
+        .stat-card.gold { border-left-color: #ffb84d; }
+        .stat-card.green { border-left-color: #3cc44b; }
+        .stat-card.red { border-left-color: #ff5a5a; }
+        .stat-title { font-size: 11px; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #fff; }
+        .stat-desc { font-size: 11px; color: #888; margin-top: 4px; line-height: 1.4; }
+        
+        /* 按钮 */
+        .btn-group { display: flex; gap: 10px; margin-bottom: 15px; }
         .btn-action {
             flex: 1; padding: 12px; border: none; border-radius: 6px; color: white; font-size: 14px; font-weight: bold; cursor: pointer;
-            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
-            text-shadow: 0 1px 2px #000; transition: 0.2s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); text-shadow: 0 1px 2px #000;
         }
-        .btn-action:active { transform: scale(0.95); }
-        .btn-run { background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%); }
+        .btn-action:active { transform: scale(0.97); }
         .btn-refresh { background: linear-gradient(90deg, #c44b3c 0%, #8a1c1c 100%); }
+        .btn-next { background: linear-gradient(90deg, #2b1c8a 0%, #4b3cc4 100%); }
+        .btn-action:disabled { background: #555; cursor: not-allowed; }
         
-        /* 日志/报告容器 */
-        .report-container {
-            flex: 1; background: rgba(0,0,0,0.85); border: 1px solid #2b1c8a;
-            border-radius: 8px; padding: 15px; font-family: monospace; font-size: 12px; line-height: 1.5;
-            color: #ccc; overflow-y: auto; position: relative; z-index: 2;
-        }
-        .report-container pre { white-space: pre-wrap; word-wrap: break-word; }
-        
-        /* 颜色辅助 */
+        /* 表格 */
+        .table-section { margin-bottom: 15px; }
+        .table-title { color: #fff; font-size: 13px; margin-bottom: 8px; border-left: 3px solid #70e0e0; padding-left: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; white-space: nowrap; background: rgba(0,0,0,0.6); }
+        th, td { padding: 8px 5px; text-align: right; border-bottom: 1px solid #333; }
+        th { color: #70e0e0; font-weight: normal; }
+        th:nth-child(1), td:nth-child(1) { text-align: center; }
+        .highlight { color: #ffb84d; }
         .text-green { color: #3cc44b; }
-        .text-red { color: #ff5a5a; }
-        .text-yellow { color: #ffb84d; }
         .text-cyan { color: #70e0e0; }
+        .text-red { color: #ff5a5a; }
     </style>
 </head>
 <body>
     <div class="mobile-container">
         <div class="top-nav">
             <div class="back-btn" onclick="window.location.href='menu.html'"></div>
-            <div class="title">📊 经济沙盘推演</div>
+            <div class="title">📊 沙盘 (通兑券版)</div>
             <div style="width:25px;"></div>
         </div>
 
-        <!-- 🌟 新增：折叠的规则说明 -->
-        <details class="rules-panel">
-            <summary>📜 查看当前沙盘推演规则</summary>
-            <ul>
-                <li><b>玩家基数：</b> 100 个模拟账号，每人初始 <b>500 秘宝</b>，0 张房卡。</li>
-                <li><b>时间流速：</b> 每天营业 14 小时（9:00 - 23:00），每局 2 分钟，一天打 210 局。</li>
-                <li><b>开房扣费：</b> 初级房10/中级房50/高级房100秘宝。房主优先消耗手里的卡，没卡则花秘宝买卡开房。</li>
-                <li><b>进房扣费：</b> 进别人的房，必定扣除对应等级的秘宝本金。</li>
-                <li><b>前四名奖励：</b> 拿回本金 + 极微薄的利润（比如初级第一名 10 + 0.16 秘宝）。</li>
-                <li><b>第五名惩罚：</b> <span class="text-red">没收全部本金</span>，不发秘宝，只发随机 1~2 张对应等级的房卡。</li>
-                <li><b>泡沫消除机制1：</b> 赢来的房卡限时 <b>48 小时</b> 有效，过期自动消失。</li>
-                <li><b>泡沫消除机制2：</b> 每周一早上 9 点，不管有多少房卡，<b>全部强制清零</b>。</li>
-                <li><b>取消限制：</b> 取消“满5张房卡不能进房”的限制，只要身上有钱就能玩。</li>
-            </ul>
-        </details>
+        <div class="scroll-content">
+            <details class="rules-panel">
+                <summary>📜 查看当前沙盘推演规则</summary>
+                <ul>
+                    <li><b>开局资产：</b> 100人，每人 500 秘宝，送 3初级/1中级/1高级房卡。</li>
+                    <li><b>前四名奖励：</b> 拿回本金 + 微利（如初级第一名 10.16）。</li>
+                    <li><b>第五名惩罚：</b> 没收秘宝本金，仅发 1~2张“任务房卡”。</li>
+                    <li><b>解卡任务：</b> 拿到任务卡后，作为房主成功开房2次（消耗2张任务卡），<b>退还一份本金 + 一份等值通兑券（1券=0.21秘宝）</b>。</li>
+                    <li><b>通兑券规则：</b> 一个房间最多进 1 个用券玩家，用券抵门票，赢了照样拿秘宝。</li>
+                    <li><b>消泡机制：</b> 赢来的房卡 48 小时过期；每周一 09:00 全服房卡清零。</li>
+                </ul>
+            </details>
 
-        <div class="btn-group">
-            <button class="btn-action btn-refresh" onclick="startSimulation()">🔄 重新模拟三周</button>
-            <button class="btn-action btn-run" onclick="addThreeWeeks()">⏩ 再来三周</button>
-        </div>
+            <div class="btn-group">
+                <button class="btn-action btn-refresh" id="btn-refresh" onclick="resetSimulation()">🔄 重置沙盘</button>
+                <button class="btn-action btn-next" id="btn-next" onclick="nextWeek()">⏩ 推演下一周</button>
+            </div>
 
-        <div class="report-container" id="report-box">
-            <div id="loading-text" class="text-cyan" style="text-align:center; margin-top:20px;">正在演算中，请稍候...</div>
-            <pre id="report-content" style="display: none;"></pre>
+            <div class="dashboard" id="dashboard">
+                <div class="stat-card gold">
+                    <div class="stat-title">总秘宝余额</div>
+                    <div class="stat-value" id="val-money">50000.00</div>
+                    <div class="stat-desc">初始: 50,000.00</div>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-title">全服通兑券</div>
+                    <div class="stat-value" id="val-ticket">0</div>
+                    <div class="stat-desc">折合: <span id="val-ticket-cash">0</span> 秘宝</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">全服剩余房卡</div>
+                    <div class="stat-value" id="val-cards">500</div>
+                    <div class="stat-desc">含未消耗任务卡</div>
+                </div>
+                <div class="stat-card red">
+                    <div class="stat-title">系统总没收</div>
+                    <div class="stat-value" id="val-consumed">0.00</div>
+                    <div class="stat-desc">没收第5名本金总额</div>
+                </div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <div class="stat-title">微观数据面板</div>
+                    <div class="stat-desc" style="font-size:12px; line-height:1.6;">
+                        解卡任务达成: <b id="val-task">0</b> 次 | 总对局数: <b id="val-rounds">0</b> 局<br>
+                        房卡消耗: <b id="val-used">0</b> 张 | 房卡发放: <b id="val-issued">0</b> 张<br>
+                        48h过期: <b id="val-expired">0</b> 张 | 周一清零: <b id="val-reset">0</b> 张
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <div class="table-title">🏆 资产前 5 名</div>
+                <table>
+                    <thead><tr><th>玩家</th><th>秘宝</th><th>通兑券</th><th>房卡</th><th>解卡数</th></tr></thead>
+                    <tbody id="table-top"></tbody>
+                </table>
+            </div>
+
+            <div class="table-section">
+                <div class="table-title" style="border-left-color: #ff5a5a;">📉 资产后 5 名</div>
+                <table>
+                    <thead><tr><th>玩家</th><th>秘宝</th><th>通兑券</th><th>房卡</th><th>解卡数</th></tr></thead>
+                    <tbody id="table-bottom"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script>
-        // 全局变量
+        // ================= 核心设定 =================
+        const TOTAL_PLAYERS = 100;
+        const INIT_MONEY = 500; 
+        const INIT_CARDS = { low: 3, mid: 1, high: 1 }; 
+        const CARD_PRICE = { low: 10, mid: 50, high: 100 };
+        const TICKET_RATE = 0.21; // 1券 = 0.21秘宝
+
         let players = [];
         let globalStats = {};
-        let reportText = "";
-        let currentWeekOffset = 0; // 记录当前推演到第几周
+        let currentWeek = 0;
+        let isSimulating = false;
 
-        // 初始化 100 个玩家
-        function initPlayers() {
+        function initGame() {
             players = [];
-            for (let i = 0; i < 100; i++) {
+            for (let i = 0; i < TOTAL_PLAYERS; i++) {
                 players.push({
                     id: i + 1,
-                    money: 500,
+                    money: INIT_MONEY,
+                    tickets: 0, // 新增：通兑券
                     cards: [], 
-                    joinCount: 0,
-                    totalPutIn: 0,
-                    totalGetBack: 0,
-                    cardsUsedToOpen: 0,
-                    cardsExpired: 0, 
-                    cardsReset: 0    
+                    cardsOpened: 0, 
+                    cardsIssued: 0, 
+                    cardsExpired: 0,
+                    cardsReset: 0,
+                    taskCardsUsedProgress: 0,
+                    taskDoneCount: 0 
                 });
-            }
-        }
 
-        // 初始化系统账本
-        function initGlobalStats() {
-            globalStats = {
-                totalRounds: 0,
-                totalCardsSold: 0, 
-                totalCardsIssued: 0, 
-                totalCardsUsed: 0,
-                printedCash: 0, 
-                absorbedCash: 0
-            };
-        }
-
-        // 核心推演函数（推演 3 周）
-        function runSimulation(weeksToRun) {
-            const CARD_PRICE = { low: 10, mid: 50, high: 100 };
-            let newReport = "";
-
-            for (let w = 1; w <= weeksToRun; w++) {
-                let currentWeekNum = currentWeekOffset + w;
-                
-                // 每周一：强制清空所有房卡
-                if (currentWeekNum > 1) {
-                    players.forEach(p => {
-                        p.cardsReset += p.cards.length;
-                        p.cards = []; 
-                    });
-                    newReport += `\n--- 🗓️ 第${currentWeekNum}周周一 09:00，全服所有房卡清零 ---\n`;
-                }
-
-                for (let day = 1; day <= 7; day++) {
-                    let roundsToday = 210; // 每天14小时
-
-                    for (let r = 0; r < roundsToday; r++) {
-                        let currentTime = Date.now() + (currentWeekNum * 7 * 24 * 60 * 60 * 1000) + (day * 24 * 60 * 60 * 1000) + (r * 2 * 60 * 1000); 
-
-                        // 检查限时卡过期
-                        players.forEach(p => {
-                            let validCards = [];
-                            p.cards.forEach(card => {
-                                if (card.expireTime && currentTime > card.expireTime) {
-                                    p.cardsExpired++; 
-                                } else {
-                                    validCards.push(card); 
-                                }
-                            });
-                            p.cards = validCards;
-                        });
-
-                        let eligiblePlayers = players.filter(p => p.money >= 10); 
-                        if (eligiblePlayers.length < 5) continue;
-
-                        let shuffled = [...eligiblePlayers].sort(() => 0.5 - Math.random());
-                        let roomPlayers = shuffled.slice(0, 5);
-
-                        let host = roomPlayers[0];
-                        let levels = ['low', 'mid', 'high'];
-                        let level = levels[Math.floor(Math.random() * 3)];
-                        let base = CARD_PRICE[level];
-
-                        // 房主开房
-                        let hostCardIndex = host.cards.findIndex(c => c.level === level);
-                        if (hostCardIndex > -1) {
-                            host.cards.splice(hostCardIndex, 1);
-                            host.cardsUsedToOpen++;
-                            globalStats.totalCardsUsed++;
-                        } else {
-                            if (host.money >= base) {
-                                host.money -= base;
-                                host.cardsUsedToOpen++;
-                                globalStats.totalCardsSold++;
-                                globalStats.totalCardsUsed++;
-                            } else {
-                                continue; 
-                            }
-                        }
-
-                        // 其他4人进房
-                        let otherPlayers = roomPlayers.slice(1);
-                        let validJoinPlayers = [];
-                        for (let p of otherPlayers) {
-                            if (p.money >= base) {
-                                p.money -= base;
-                                p.totalPutIn += base;
-                                p.joinCount++;
-                                validJoinPlayers.push(p);
-                            }
-                        }
-
-                        if (validJoinPlayers.length < 4) continue;
-
-                        globalStats.totalRounds++;
-                        let allRoomPlayers = [host, ...validJoinPlayers];
-                        host.joinCount++;
-
-                        // 发奖
-                        let ranked = [...allRoomPlayers].sort(() => 0.5 - Math.random());
-                        
-                        for (let i = 0; i < 4; i++) {
-                            let p = ranked[i];
-                            let profitMultiplier = [0.016, 0.01, 0.008, 0.006][i];
-                            let profit = base * profitMultiplier;
-                            let reward = base + profit; 
-                            
-                            p.money += reward;
-                            p.totalGetBack += reward;
-                            globalStats.printedCash += profit;
-                        }
-
-                        let fifth = ranked[4];
-                        globalStats.absorbedCash += base;
-
-                        let cardReward = Math.random() > 0.5 ? 1 : 2; 
-                        for(let c = 0; c < cardReward; c++) {
-                            fifth.cards.push({ 
-                                level: level, 
-                                expireTime: currentTime + 48 * 60 * 60 * 1000 
-                            });
-                            globalStats.totalCardsIssued++;
-                        }
+                for(let l in INIT_CARDS) {
+                    for(let c = 0; c < INIT_CARDS[l]; c++) {
+                        players[i].cards.push({ level: l, expireTime: 9999999999999, isTask: false });
                     }
                 }
-                newReport += generateWeeklyReport(currentWeekNum);
-            }
-            return newReport;
-        }
-
-        // 生成周报
-        function generateWeeklyReport(week) {
-            let totalMoney = 0;
-            players.forEach(p => { totalMoney += p.money; });
-
-            let marketBubble = totalMoney - (100 * 500);
-
-            return `
-=============================================
-📊 第 ${week} 周 运营数据报告
-=============================================
-【💰 现金池现状】
-* 100人手里的秘宝总额: ${totalMoney.toFixed(2)} (初始50000)
-* 市场泡沫（冗余资金）: ${marketBubble > 0 ? '+' : ''}${marketBubble.toFixed(2)}
-* 当前状态: ${marketBubble > 5000 ? '🚨 严重通胀（泡沫）' : (marketBubble < -5000 ? '📉 严重通缩，钱被抽干了' : '✅ 资金平衡')}
-
-【🏦 系统真实印钞机数据】
-* 系统累计多印利润: ${globalStats.printedCash.toFixed(2)}
-* 系统累计没收第5名本金: ${globalStats.absorbedCash.toFixed(2)}
-* 系统净赚/净亏: ${(globalStats.absorbedCash - globalStats.printedCash).toFixed(2)}
-
----------------------------------------------
-            `;
-        }
-
-        // 开始全新的三周模拟
-        function startSimulation() {
-            document.getElementById('loading-text').style.display = 'block';
-            document.getElementById('report-content').style.display = 'none';
-            document.getElementById('loading-text').innerText = "正在重新初始化 100 个账号并演算三周...";
-
-            setTimeout(() => {
-                initPlayers();
-                initGlobalStats();
-                reportText = "";
-                currentWeekOffset = 0;
-
-                reportText += runSimulation(3);
-                currentWeekOffset = 3;
-
-                showReport(reportText);
-            }, 100);
-        }
-
-        // 继续追加三周
-        function addThreeWeeks() {
-            if (currentWeekOffset === 0) {
-                alert("请先点击左侧按钮开始第一次模拟！");
-                return;
             }
 
-            document.getElementById('loading-text').style.display = 'block';
-            document.getElementById('report-content').style.display = 'none';
-            document.getElementById('loading-text').innerText = `正在接着推演第 ${currentWeekOffset + 1} 到 ${currentWeekOffset + 3} 周...`;
-
-            setTimeout(() => {
-                let newReport = runSimulation(3);
-                currentWeekOffset += 3;
-                
-                // 把新报告塞到最前面，保留旧数据
-                reportText = newReport + reportText;
-                showReport(reportText);
-            }, 100);
+            globalStats = {
+                totalRounds: 0, 
+                totalConsumed: 0,
+                cardsUsed: 0, 
+                cardsIssued: 0, 
+                cardsExpired: 0, 
+                cardsReset: 0, 
+                taskDoneCount: 0,
+                ticketsIssued: 0, // 累计发券
+                ticketsConsumed: 0 // 累计用券抵扣
+            };
+            currentWeek = 0;
+            updateUI();
         }
 
-        // 渲染报告
-        function showReport(html) {
-            document.getElementById('loading-text').style.display = 'none';
-            const contentEl = document.getElementById('report-content');
-            contentEl.style.display = 'block';
+        function runOneWeek() {
+            currentWeek++;
+            // 每周一清零
+            if (currentWeek > 1) {
+                players.forEach(p => { 
+                    globalStats.cardsReset += p.cards.length;
+                    p.cardsReset += p.cards.length;
+                    p.cards = []; 
+                    p.taskCardsUsedProgress = 0; 
+                });
+            }
+
+            for (let day = 1; day <= 7; day++) {
+                for (let r = 0; r < 210; r++) { 
+                    let currentTime = Date.now() + (currentWeek * 7 * 24 * 60 * 60 * 1000) + (r * 2 * 60 * 1000); 
+
+                    // 房卡过期
+                    players.forEach(p => {
+                        let validCards = [];
+                        p.cards.forEach(c => {
+                            if (c.expireTime && c.expireTime <= currentTime) {
+                                p.cardsExpired++; globalStats.cardsExpired++;
+                            } else { validCards.push(c); }
+                        });
+                        p.cards = validCards;
+                    });
+
+                    let eligiblePlayers = players.filter(p => p.money >= 10); 
+                    if (eligiblePlayers.length < 5) continue;
+
+                    let pool = [...eligiblePlayers].sort(() => 0.5 - Math.random());
+                    let roomPlayers = pool.slice(0, 5);
+                    let host = roomPlayers[0];
+
+                    let level = ['low', 'mid', 'high'][Math.floor(Math.random() * 3)];
+                    let base = CARD_PRICE[level];
+
+                    let hostCardIndex = host.cards.findIndex(c => c.level === level);
+                    let usedTaskCard = false;
+
+                    if (hostCardIndex > -1) {
+                        let card = host.cards.splice(hostCardIndex, 1)[0];
+                        host.cardsOpened++; globalStats.cardsUsed++;
+                        if (card.isTask) usedTaskCard = true;
+                    } else if (host.money >= base) {
+                        host.money -= base;
+                        host.cardsOpened++; globalStats.cardsUsed++;
+                    } else { continue; }
+
+                    // 其他人进房（每人优先判断能不能用券）
+                    let otherPlayers = roomPlayers.filter(p => p !== host);
+                    let validJoinPlayers = [];
+                    let roomHasUsedTicket = false; 
+
+                    for (let p of otherPlayers) {
+                        // 只要这房间还没人用券，且该玩家券够
+                        if (!roomHasUsedTicket && p.tickets >= (base / TICKET_RATE)) {
+                            p.tickets -= (base / TICKET_RATE);
+                            globalStats.ticketsConsumed += (base / TICKET_RATE);
+                            validJoinPlayers.push(p);
+                            roomHasUsedTicket = true; 
+                        } else if (p.money >= base) {
+                            p.money -= base;
+                            validJoinPlayers.push(p);
+                        }
+                    }
+                    if (validJoinPlayers.length < 4) continue;
+
+                    globalStats.totalRounds++;
+                    
+                    // 任务进度（用任务卡开房）
+                    if (usedTaskCard) {
+                        host.taskCardsUsedProgress++;
+                        if (host.taskCardsUsedProgress >= 2) {
+                            host.taskCardsUsedProgress -= 2;
+                            host.taskDoneCount++; globalStats.taskDoneCount++;
+                            
+                            // 核心奖励：退还本金 + 发等额通兑券
+                            host.money += base; 
+                            let taskTickets = base / TICKET_RATE;
+                            host.tickets += taskTickets;
+                            globalStats.ticketsIssued += taskTickets;
+                        }
+                    }
+
+                    let allRoomPlayers = [host, ...validJoinPlayers];
+                    let ranked = [...allRoomPlayers].sort(() => 0.5 - Math.random());
+                    
+                    // 前四名发秘宝
+                    for (let i = 0; i < 4; i++) {
+                        let p = ranked[i];
+                        let profit = base * [0.016, 0.01, 0.008, 0.006][i];
+                        p.money += (base + profit);
+                    }
+
+                    // 第五名：没收秘宝，发任务卡
+                    let fifth = ranked[4];
+                    globalStats.totalConsumed += base; // 系统没收的钱
+                    
+                    let cardCount = Math.random() > 0.5 ? 1 : 2;
+                    for(let c = 0; c < cardCount; c++) {
+                        fifth.cards.push({ level: level, expireTime: currentTime + 48 * 60 * 60 * 1000, isTask: true });
+                        fifth.cardsIssued++; globalStats.cardsIssued++;
+                    }
+                }
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            let totalMoney = 0, totalTickets = 0, totalCards = 0;
+            players.forEach(p => {
+                totalMoney += p.money;
+                totalTickets += p.tickets;
+                totalCards += p.cards.length;
+            });
+
+            let totalTicketVal = totalTickets * TICKET_RATE;
+
+            document.getElementById('val-money').innerText = totalMoney.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('val-ticket').innerText = totalTickets.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('val-ticket-cash').innerText = totalTicketVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('val-cards').innerText = totalCards;
+            document.getElementById('val-consumed').innerText = globalStats.totalConsumed.toLocaleString();
+            document.getElementById('val-task').innerText = globalStats.taskDoneCount;
+
+            document.getElementById('val-rounds').innerText = globalStats.totalRounds;
+            document.getElementById('val-used').innerText = globalStats.cardsUsed;
+            document.getElementById('val-issued').innerText = globalStats.cardsIssued;
+            document.getElementById('val-expired').innerText = globalStats.cardsExpired;
+            document.getElementById('val-reset').innerText = globalStats.cardsReset;
+
+            // 排序
+            let sortedPlayers = [...players].sort((a, b) => b.money - a.money);
             
-            // 简单高亮处理
-            let formattedHtml = html
-                .replace(/严重通胀/g, '<span class="text-red">严重通胀</span>')
-                .replace(/严重通缩/g, '<span class="text-yellow">严重通缩</span>')
-                .replace(/资金平衡/g, '<span class="text-green">资金平衡</span>');
+            // 前5名
+            let topHtml = "";
+            sortedPlayers.slice(0, 5).forEach((p) => {
+                topHtml += `<tr><td>P${p.id}</td><td class="highlight">${p.money.toFixed(2)}</td><td class="text-green">${p.tickets.toFixed(0)}</td><td class="text-cyan">${p.cards.length}</td><td>${p.taskDoneCount}</td></tr>`;
+            });
+            document.getElementById('table-top').innerHTML = topHtml;
 
-            contentEl.innerHTML = formattedHtml;
+            // 后5名
+            let bottomHtml = "";
+            sortedPlayers.slice(-5).forEach((p) => {
+                bottomHtml += `<tr><td>P${p.id}</td><td class="text-red">${p.money.toFixed(2)}</td><td class="text-green">${p.tickets.toFixed(0)}</td><td class="text-cyan">${p.cards.length}</td><td>${p.taskDoneCount}</td></tr>`;
+            });
+            document.getElementById('table-bottom').innerHTML = bottomHtml;
         }
 
-        // 页面加载完毕后自动跑第一次
-        window.onload = () => {
-            startSimulation();
-        };
+        function nextWeek() {
+            if (isSimulating) return;
+            isSimulating = true;
+            document.getElementById('btn-next').innerText = "计算中...";
+            
+            setTimeout(() => {
+                runOneWeek();
+                isSimulating = false;
+                document.getElementById('btn-next').innerText = "⏩ 推演下一周";
+            }, 100);
+        }
+
+        function resetSimulation() {
+            if (isSimulating) return;
+            initGame();
+        }
+
+        window.onload = () => { initGame(); };
     </script>
 </body>
 </html>
