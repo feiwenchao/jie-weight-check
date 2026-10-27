@@ -18,12 +18,26 @@
         /* 顶部导航 */
         .top-nav { 
             display: flex; justify-content: space-between; align-items: center; 
-            padding-bottom: 15px; position: relative; z-index: 2; 
+            padding-bottom: 10px; position: relative; z-index: 2; 
             border-bottom: 1px solid rgba(112,224,224,0.3); 
         }
         .back-btn { width: 25px; height: 25px; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='19' y1='12' x2='5' y2='12'%3E%3C/line%3E%3Cpolyline points='12 19 5 12 12 5'%3E%3C/polyline%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
         .title { font-size: 18px; color: #70e0e0; font-weight: bold; text-shadow: 0 0 8px rgba(112,224,224,0.5); }
         
+        /* 规则面板 */
+        .rules-panel {
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(112,224,224,0.3);
+            border-radius: 6px; margin-top: 10px; padding: 10px;
+            font-size: 12px; color: #ccc; position: relative; z-index: 2;
+        }
+        .rules-panel summary {
+            cursor: pointer; color: #ffb84d; font-weight: bold; font-size: 13px;
+            outline: none; user-select: none;
+        }
+        .rules-panel ul {
+            margin-top: 8px; padding-left: 15px; line-height: 1.6;
+        }
+
         /* 按钮样式 */
         .btn-group { display: flex; gap: 10px; margin: 15px 0; position: relative; z-index: 2; }
         .btn-action {
@@ -57,6 +71,22 @@
             <div class="title">📊 经济沙盘推演</div>
             <div style="width:25px;"></div>
         </div>
+
+        <!-- 🌟 新增：折叠的规则说明 -->
+        <details class="rules-panel">
+            <summary>📜 查看当前沙盘推演规则</summary>
+            <ul>
+                <li><b>玩家基数：</b> 100 个模拟账号，每人初始 <b>500 秘宝</b>，0 张房卡。</li>
+                <li><b>时间流速：</b> 每天营业 14 小时（9:00 - 23:00），每局 2 分钟，一天打 210 局。</li>
+                <li><b>开房扣费：</b> 初级房10/中级房50/高级房100秘宝。房主优先消耗手里的卡，没卡则花秘宝买卡开房。</li>
+                <li><b>进房扣费：</b> 进别人的房，必定扣除对应等级的秘宝本金。</li>
+                <li><b>前四名奖励：</b> 拿回本金 + 极微薄的利润（比如初级第一名 10 + 0.16 秘宝）。</li>
+                <li><b>第五名惩罚：</b> <span class="text-red">没收全部本金</span>，不发秘宝，只发随机 1~2 张对应等级的房卡。</li>
+                <li><b>泡沫消除机制1：</b> 赢来的房卡限时 <b>48 小时</b> 有效，过期自动消失。</li>
+                <li><b>泡沫消除机制2：</b> 每周一早上 9 点，不管有多少房卡，<b>全部强制清零</b>。</li>
+                <li><b>取消限制：</b> 取消“满5张房卡不能进房”的限制，只要身上有钱就能玩。</li>
+            </ul>
+        </details>
 
         <div class="btn-group">
             <button class="btn-action btn-refresh" onclick="startSimulation()">🔄 重新模拟三周</button>
@@ -251,7 +281,6 @@
             document.getElementById('report-content').style.display = 'none';
             document.getElementById('loading-text').innerText = "正在重新初始化 100 个账号并演算三周...";
 
-            // 延迟一下让 UI 刷新
             setTimeout(() => {
                 initPlayers();
                 initGlobalStats();
