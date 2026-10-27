@@ -30,11 +30,13 @@
         .cart-icon:active { transform: scale(0.8); }
 
         .welcome-title { text-align: center; font-size: 22px; font-weight: bold; color: #fff; text-shadow: 0 0 10px rgba(255, 50, 50, 0.8); margin-top: 10px; letter-spacing: 2px; position: relative; z-index: 2; }
+        
         .car-showcase { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; position: relative; z-index: 2; }
         .car-showcase img { width: 100%; max-width: 350px; object-fit: contain; filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)); animation: float 3s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         
-        .button-group { padding: 0 30px 15px 30px; display: flex; flex-direction: column; gap: 15px; position: relative; z-index: 2; }
+        /* 修改了 padding 底部距离，让 4 个按钮能放得下 */
+        .button-group { padding: 0 30px 30px 30px; display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 2; }
         
         .menu-btn {
             width: 100%; padding: 15px 20px; border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: bold; cursor: pointer;
@@ -48,6 +50,7 @@
         .menu-btn.create { background: linear-gradient(135deg, rgba(26, 41, 128, 0.8) 0%, rgba(38, 208, 206, 0.6) 100%); border-left: 4px solid #26d0ce; }
         .menu-btn.join { background: linear-gradient(135deg, rgba(128, 0, 0, 0.8) 0%, rgba(255, 75, 43, 0.6) 100%); border-left: 4px solid #ff4b2b; }
         .menu-btn.history { background: linear-gradient(135deg, rgba(58, 28, 113, 0.8) 0%, rgba(215, 109, 119, 0.6) 100%); border-left: 4px solid #d76d77; }
+        .menu-btn.sandbox { background: linear-gradient(135deg, rgba(43, 28, 138, 0.8) 0%, rgba(75, 60, 196, 0.6) 100%); border-left: 4px solid #4b3cc4; }
 
         .arrow { font-size: 18px; color: #fff; opacity: 0.7; }
     </style>
@@ -59,7 +62,6 @@
             <div class="back-btn" onclick="window.location.href='index.html'"></div>
             <div class="top-right">
                 <div class="wallet" id="walletInfo">0 秘宝</div>
-                <!-- 确保跳转到 shop.html -->
                 <div class="cart-icon" onclick="window.location.href='shop.html'"></div>
             </div>
         </div>
@@ -68,6 +70,7 @@
         
         <div class="car-showcase"><img src="menu-car.jpg" alt="赛车"></div>
         
+        <!-- 只有一个按钮组，包含四个按钮 -->
         <div class="button-group">
             <button class="menu-btn create" onclick="window.location.href='create.html'">
                 <span>创建比赛</span>
@@ -77,32 +80,17 @@
                 <span>加入比赛</span>
                 <span class="arrow">➔</span>
             </button>
-            <!-- 确保跳转到 history.html -->
             <button class="menu-btn history" onclick="window.location.href='history.html'">
                 <span>查看比赛记录</span>
                 <span class="arrow">➔</span>
             </button>
-        </div>
-    </div>
-            <div class="button-group">
-            <button class="menu-btn create" onclick="window.location.href='create.html'">
-                <span>创建比赛</span>
-                <span class="arrow">➔</span>
-            </button>
-            <button class="menu-btn join" onclick="window.location.href='lobby.html'">
-                <span>加入比赛</span>
-                <span class="arrow">➔</span>
-            </button>
-            <button class="menu-btn history" onclick="window.location.href='history.html'">
-                <span>查看比赛记录</span>
-                <span class="arrow">➔</span>
-            </button>
-            <!-- ⚠️ 新增：沙盘测试入口 -->
-            <button class="menu-btn" style="background: linear-gradient(135deg, rgba(43, 28, 138, 0.8) 0%, rgba(75, 60, 196, 0.6) 100%); border-left: 4px solid #4b3cc4;" onclick="window.location.href='sandbox.html'">
+            <!-- 沙盘测试入口 -->
+            <button class="menu-btn sandbox" onclick="window.location.href='sandbox.html'">
                 <span>📊 经济沙盘测试</span>
                 <span class="arrow">➔</span>
             </button>
         </div>
+    </div>
 
     <script>
         try {
