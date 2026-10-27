@@ -20,13 +20,7 @@
         .btn-search { padding: 0 15px; background: linear-gradient(90deg, #2b1c8a, #4b3cc4); color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer; clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%); text-shadow: 0 1px 2px #000; }
         .divider { display: flex; align-items: center; color: #aaa; font-size: 12px; margin: 10px 0 15px 0; text-shadow: 0 1px 2px #000; }
         .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.2); margin: 0 10px; }
-        
-        /* 刷新按钮样式 */
-        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .room-list-title { font-size: 14px; color: #fff; text-shadow: 0 1px 3px #000; font-weight: bold; }
-        .btn-refresh { background: rgba(112,224,224,0.1); border: 1px solid #70e0e0; color: #70e0e0; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
-        .btn-refresh:active { transform: scale(0.95); }
-        
+        .room-list-title { font-size: 14px; margin-bottom: 10px; color: #fff; text-shadow: 0 1px 3px #000; font-weight: bold; }
         .room-list { flex: 1; overflow-y: auto; padding-bottom: 20px; }
         .room-item { background: linear-gradient(135deg, rgba(10, 20, 40, 0.9) 0%, rgba(5, 10, 25, 0.8) 100%); padding: 12px 15px; margin-bottom: 10px; border-radius: 6px; border-left: 3px solid; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .room-item:active { transform: scale(0.98); }
@@ -54,73 +48,44 @@
                 </div>
             </div>
             <div class="divider">或 者 从 大 厅 加 入</div>
-            
-            <div class="list-header">
-                <div class="room-list-title">🏆 在线房间列表</div>
-                <!-- 🌟 新增：刷新按钮 -->
-                <button class="btn-refresh" onclick="refreshRooms()">🔄 刷新大厅</button>
-            </div>
-            
+            <div class="room-list-title">🏆 在线房间列表 (等待开局)</div>
             <div class="room-list" id="roomList"></div>
         </div>
     </div>
 
     <script>
         let p = getPlayer();
-        document.getElementById('balance').innerText = `${p.treasures} 秘宝`;
+        document.getElementById('balance').innerText = `${p.treasures.toFixed(1)} 秘宝`;
 
-        // 核心逻辑：检查并自愈数据
-        function checkAndHealData() {
-            let activeRooms = JSON.parse(localStorage.getItem('activeRooms'));
-            let isValidData = activeRooms && Array.isArray(activeRooms);
-            
-            if (!isValidData) {
-                activeRooms = [];
-            }
-
-            // 只保留还在等待中的房间
-            let waitingRooms = activeRooms.filter(r => r.status === 'waiting');
-
-            // 如果等待中的房间少于3个，疯狂补足！
-            if (waitingRooms.length < 3) {
-                const levels = ['low', 'mid', 'high'];
-                const names = { low: '初级房', mid: '中级房', high: '高级房' };
-                
-                for (let i = waitingRooms.length; i < 3; i++) {
-                    let level = levels[Math.floor(Math.random() * 3)];
-                    activeRooms.push({
-                        id: Math.floor(1000 + Math.random() * 9000).toString(),
-                        level: level,
-                        name: names[level],
-                        currentPlayers: Math.floor(Math.random() * 3) + 1, // 1-3人
-                        status: 'waiting'
-                    });
-                }
-                localStorage.setItem('activeRooms', JSON.stringify(activeRooms));
-            }
-            return activeRooms;
+        // 检查并生成大厅房间
+        let activeRooms = JSON.parse(localStorage.getItem('activeRooms'));
+        if (!activeRooms || !Array.isArray(activeRooms) || activeRooms.filter(r => r.status === 'waiting').length < 3) {
+            activeRooms = [
+                { id: Math.floor(1000 + Math.random()*9000).toString(), level: 'low', name: '初级房', currentPlayers: 2, status: 'waiting' },
+                { id: Math.floor(1000 + Math.random()*9000).toString(), level: 'mid', name: '中级房', currentPlayers: 3, status: 'waiting' },
+                { id: Math.floor(1000 + Math.random()*9000).toString(), level: 'high', name: '高级房', currentPlayers: 4, status: 'waiting' }
+            ];
+            localStorage.setItem('activeRooms', JSON.stringify(activeRooms));
         }
-
-        let activeRooms = checkAndHealData();
 
         const roomListEl = document.getElementById('roomList');
         
         function renderRooms() {
             roomListEl.innerHTML = '';
-            // 每次渲染先检查一遍数据状态
-            activeRooms = checkAndHealData();
-            
             let validRooms = activeRooms.filter(r => r.status === 'waiting');
+            if (validRooms.length === 0) {
+                roomListEl.innerHTML = `<div style="text-align:center; color:#aaa; margin-top:20px;">当前没有等待中的房间，请稍后再来~</div>`;
+                return;
+            }
 
             validRooms.forEach(room => {
                 const div = document.createElement('div');
                 div.className = `room-item ${room.level}`;
                 let price = room.level === 'low' ? 10 : (room.level === 'mid' ? 50 : 100);
-                
                 div.innerHTML = `
                     <div class="room-info">
                         <h3>${room.name} (房号: ${room.id})</h3>
-                        <p>消耗 ${price} 秘宝进入</p>
+                        <p>需 ${price} 秘宝或等值通兑券</p>
                     </div>
                     <div style="display:flex; align-items:center;">
                         <span class="room-status">${room.currentPlayers}/5 人</span>
@@ -133,45 +98,57 @@
         }
         renderRooms();
 
-        // 刷新按钮点击事件
-        function refreshRooms() {
-            // 强制清除所有比赛中的房间，只保留等待中的，然后重新渲染
-            let roomsData = JSON.parse(localStorage.getItem('activeRooms'));
-            if (roomsData) {
-                roomsData = roomsData.filter(r => r.status === 'waiting');
-                localStorage.setItem('activeRooms', JSON.stringify(roomsData));
-            }
-            activeRooms = checkAndHealData();
-            renderRooms();
-            alert("大厅已刷新！");
-        }
-
         function enterRoom(id, level, initialPlayers) {
-            let p = getPlayer();
-            let price = level === 'low' ? 10 : (level === 'mid' ? 50 : 100);
-            
-            if (p.treasures < price) { alert("秘宝不足！"); return; }
-            p.treasures -= price;
-            savePlayer(p);
+            try {
+                let p = getPlayer();
+                let basePrice = level === 'low' ? 10 : (level === 'mid' ? 50 : 100);
+                let ticketsNeeded = basePrice / TICKET_RATE;
+                let myTickets = p.tickets || 0;
 
-            let roomsData = JSON.parse(localStorage.getItem('activeRooms'));
-            let roomIndex = roomsData.findIndex(r => r.id === id);
-            if (roomIndex > -1) {
-                roomsData[roomIndex].status = 'racing'; // 标记为开赛
-                localStorage.setItem('activeRooms', JSON.stringify(roomsData));
+                let payWith = "";
+                if (myTickets >= ticketsNeeded && p.treasures >= basePrice) {
+                    let choice = prompt(`您的余额充足。\n输入 1 扣除 ${basePrice} 秘宝进场\n输入 2 扣除 ${ticketsNeeded.toFixed(1)} 张通兑券进场（等值抵扣）`);
+                    if (choice === "1") payWith = "money";
+                    else if (choice === "2") payWith = "ticket";
+                    else return;
+                } else if (myTickets >= ticketsNeeded) {
+                    if(confirm(`您的秘宝不足。是否使用 ${ticketsNeeded.toFixed(1)} 张通兑券进场？`)) payWith = "ticket";
+                    else return;
+                } else if (p.treasures >= basePrice) {
+                    if(confirm(`将扣除 ${basePrice} 秘宝进场，是否确认？`)) payWith = "money";
+                    else return;
+                } else {
+                    alert("秘宝和通兑券都不足，无法加入！");
+                    return;
+                }
+
+                // 扣费
+                if (payWith === "money") {
+                    p.treasures -= basePrice;
+                } else {
+                    p.tickets -= ticketsNeeded;
+                }
+                savePlayer(p);
+
+                // 标记大厅状态
+                let roomsData = JSON.parse(localStorage.getItem('activeRooms'));
+                let roomIndex = roomsData.findIndex(r => r.id === id);
+                if (roomIndex > -1) {
+                    roomsData[roomIndex].status = 'racing';
+                    localStorage.setItem('activeRooms', JSON.stringify(roomsData));
+                }
+
+                localStorage.setItem('currentRoom', JSON.stringify({ id: id, level: level, initialPlayers: initialPlayers }));
+                window.location.href = "game.html";
+            } catch (err) {
+                alert("进房出错：" + err.message);
             }
-
-            localStorage.setItem('currentRoom', JSON.stringify({ 
-                id: id, level: level, initialPlayers: initialPlayers 
-            }));
-            window.location.href = "game.html";
         }
 
         function searchRoom() {
             const inputId = document.getElementById('roomInput').value.trim();
             if (inputId === "") { alert("请输入房间号"); return; }
             const targetRoom = activeRooms.find(r => r.id === inputId);
-            
             if (targetRoom) {
                 if (targetRoom.status !== 'waiting') {
                     alert("该房间比赛已经开始，无法加入！");
