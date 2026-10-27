@@ -58,7 +58,6 @@
             document.getElementById('roomTitle').innerText = `房间号: ${room.id}`;
             document.getElementById('roomLevel').innerText = `等级: ${room.level === 'low' ? '初级房' : room.level === 'mid' ? '中级房' : '高级房'}`;
             
-            // 🌟 核心修复：进场立刻写入历史记录
             addOngoingHistory(room);
             
             const maxPlayers = 5;
@@ -68,6 +67,7 @@
             const statusText = document.getElementById('statusText');
             
             let allPlayers = [{ name: getMyName(), isMe: true }];
+            // 如果之前带了机器人，先补进去
             let botsInRoom = parseInt(room.initialPlayers) || 1; 
             
             for (let i = 0; i < botsInRoom; i++) {
@@ -101,22 +101,24 @@
             }
             renderPlayerList();
 
-            function robotEnter() {
+            // 🌟 核心修复：直接判断，人满就开，没满就进机器人，直到满为止
+            function checkAndStart() {
                 if (isRaceStarted) return;
                 if (playerCount < maxPlayers) {
                     playerCount++;
                     allPlayers.push({ name: generateRacerName(), isMe: false });
                     renderPlayerList();
-                    if (playerCount < maxPlayers) {
-                        setTimeout(robotEnter, 800); 
-                    } else {
-                        isRaceStarted = true;
-                        updateHistoryStartTime(Date.now()); // 记录开局时间
-                        startRaceCountdown(10); // 测试阶段 10 秒倒计时
-                    }
+                    setTimeout(checkAndStart, 800); // 没满就继续进
+                } else {
+                    isRaceStarted = true;
+                    updateHistoryStartTime(Date.now()); // 记录开局时间
+                    statusText.innerText = "人满，比赛准备开始！";
+                    setTimeout(() => {
+                        startRaceCountdown(10); // 满员后等1秒，开始10秒倒计时
+                    }, 1000);
                 }
             }
-            setTimeout(robotEnter, 500);
+            setTimeout(checkAndStart, 500); // 进场0.5秒后开始检查
 
             function startRaceCountdown(seconds) {
                 let timeLeft = seconds;
@@ -157,7 +159,6 @@
                     savePlayer(p);
                     rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
                 } else {
-                    // 新版的发卡逻辑
                     if (!p.cards[room.level].temp) p.cards[room.level].temp = [];
                     let now = Date.now();
                     for(let c=0; c<fifthPlaceCards; c++) {
@@ -172,7 +173,6 @@
                     return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
                 });
                 
-                // 🌟 核心修复：结算写入历史记录
                 completeOngoingHistory(myRank, rewardText, fullListForHistory);
 
                 statusText.style.display = "none";
@@ -181,8 +181,7 @@
                 let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
                 document.getElementById('mainResultText').innerHTML = mainText;
 
-                // 🌟 核心：解卡任务进度结算
-                let isHostUsedTaskCard = true; // 假设房主就是用任务卡开的房
+                let isHostUsedTaskCard = true; 
                 let taskResult = checkAndClearTask(basePrice, isHostUsedTaskCard);
                 
                 if (taskResult) {
