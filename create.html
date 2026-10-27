@@ -35,7 +35,7 @@
             try {
                 let p = getPlayer();
                 
-                // 🌟 防错兼容机制：如果读取到的是旧版数字，自动转换成新对象格式
+                // 兼容旧数据
                 if (typeof p.cards[level] === 'number') {
                     let oldCount = p.cards[level];
                     p.cards[level] = { perm: oldCount, temp: [] };
@@ -44,16 +44,13 @@
                 }
 
                 let permCount = p.cards[level].perm;
-                
-                // 清理过期卡
                 let now = Date.now();
-                let tempArr = p.cards[level].temp || [];
-                p.cards[level].temp = tempArr.filter(e => e > now);
+                p.cards[level].temp = (p.cards[level].temp || []).filter(e => e > now);
                 let tempCount = p.cards[level].temp.length;
                 savePlayer(p);
 
                 if (permCount === 0 && tempCount === 0) {
-                    alert("房卡不足！请去商城购买或参与游戏赢取。"); 
+                    alert(`您的【${level === 'low' ? '初级' : level === 'mid' ? '中级' : '高级'}房卡】不足！\n请去商城购买或参与游戏赢取。`); 
                     return;
                 }
 
@@ -62,9 +59,9 @@
                 if (permCount > 0 && tempCount > 0) {
                     choice = prompt(`您有 ${permCount} 张永久卡，${tempCount} 张限时卡。\n请输入 1 使用限时卡（优先消耗），输入 2 使用购买卡：`);
                 } else if (tempCount > 0) {
-                    if(confirm(`您有 ${tempCount} 张限时卡，是否使用？`)) choice = "1";
+                    if(confirm(`您仅有 ${tempCount} 张限时卡，是否使用？`)) choice = "1";
                 } else if (permCount > 0) {
-                    if(confirm(`您有 ${permCount} 张购买卡（周一清零），是否使用？`)) choice = "2";
+                    if(confirm(`您仅有 ${permCount} 张购买卡（周一清零），是否使用？`)) choice = "2";
                 }
 
                 if (choice === "1" && tempCount > 0) {
@@ -75,15 +72,22 @@
                     alert("选择无效或卡不足。");
                     return;
                 } else {
-                    return;
+                    return; // 取消
                 }
 
                 savePlayer(p);
                 const roomId = Math.floor(100000 + Math.random() * 900000).toString();
-                localStorage.setItem('currentRoom', JSON.stringify({ id: roomId, level: level, isHost: true, initialPlayers: 0 }));
+                
+                // 🌟 核心修复：如果是自己创建房间，初始人数强制为 1（只有自己），剩下的交给 game.html 的机器人补位
+                localStorage.setItem('currentRoom', JSON.stringify({ 
+                    id: roomId, 
+                    level: level, 
+                    isHost: true, 
+                    initialPlayers: 1 // 强制改成1，不要写0
+                }));
+                
                 window.location.href = "game.html";
             } catch (error) {
-                // 如果报错，直接把原因弹窗告诉你，不藏着掖着
                 alert("系统错误：" + error.message + "\n请清理浏览器缓存后重试。");
             }
         }
