@@ -6,6 +6,7 @@
     <title>游戏房间</title>
     <script src="data.js"></script>
     <style>
+        /* 样式保持原样 */
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
         body { background-color: #121212; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; color: white; }
         .mobile-container { width: 100%; max-width: 430px; height: 100vh; background-color: #040e28; background-image: url('menu.png'); background-size: cover; padding: 20px; display: flex; flex-direction: column; position: relative; }
@@ -33,14 +34,14 @@
     <div class="mobile-container">
         <div class="top-nav">
             <div class="back-btn" onclick="window.location.href='lobby.html'"></div>
-            <h2 id="roomTitle" style="font-size:16px; margin:0; color:#70e0e0;">房间号: ------</h2>
+            <h2 id="roomTitle" style="font-size:16px; margin:0; color:#70e0e0;">房间号: 读取中...</h2>
             <div style="width:25px;"></div>
         </div>
         <div class="header" style="border-bottom:none; padding-top:0;">
-            <p id="roomLevel" style="font-size: 12px; color:#aaa;">等级: 初级房</p>
+            <p id="roomLevel" style="font-size: 12px; color:#aaa;">等级: 读取中...</p>
         </div>
         <div class="player-list" id="playerList"></div>
-        <div class="status-text" id="statusText">正在读取房间信息...</div>
+        <div class="status-text" id="statusText">正在初始化...</div>
         
         <div id="result-area">
             <div class="result-title" id="mainResultText"></div>
@@ -51,13 +52,21 @@
     </div>
 
     <script>
-        const room = JSON.parse(localStorage.getItem('currentRoom'));
+        let room = null;
+        try {
+            room = JSON.parse(localStorage.getItem('currentRoom'));
+        } catch (e) {
+            alert("房间数据损坏！");
+        }
+
         if (!room) { 
+            alert("未找到房间数据，返回主菜单。");
             window.location.href = "menu.html"; 
         } else {
             document.getElementById('roomTitle').innerText = `房间号: ${room.id}`;
             document.getElementById('roomLevel').innerText = `等级: ${room.level === 'low' ? '初级房' : room.level === 'mid' ? '中级房' : '高级房'}`;
             
+            // 🚀 1. 强制进场时写入记录
             addOngoingHistory(room);
             
             const maxPlayers = 5;
@@ -67,16 +76,8 @@
             const statusText = document.getElementById('statusText');
             
             let allPlayers = [{ name: getMyName(), isMe: true }];
-            // 如果之前带了机器人，先补进去
-            let botsInRoom = parseInt(room.initialPlayers) || 1; 
             
-            for (let i = 0; i < botsInRoom; i++) {
-                if (playerCount < maxPlayers) {
-                    allPlayers.push({ name: generateRacerName(), isMe: false });
-                    playerCount++;
-                }
-            }
-
+            // 渲染初始列表
             function renderPlayerList() {
                 playerList.innerHTML = ''; 
                 for (let i = 0; i < allPlayers.length; i++) {
@@ -101,33 +102,30 @@
             }
             renderPlayerList();
 
-            // 🌟 核心修复：直接判断，人满就开，没满就进机器人，直到满为止
-            function checkAndStart() {
+            // 🚀 2. 补人并启动倒计时
+            function robotEnter() {
                 if (isRaceStarted) return;
                 if (playerCount < maxPlayers) {
                     playerCount++;
                     allPlayers.push({ name: generateRacerName(), isMe: false });
                     renderPlayerList();
-                    setTimeout(checkAndStart, 800); // 没满就继续进
+                    setTimeout(robotEnter, 800); 
                 } else {
                     isRaceStarted = true;
-                    updateHistoryStartTime(Date.now()); // 记录开局时间
-                    statusText.innerText = "赛车手均已准备就绪，比赛开始！";
+                    statusText.innerText = "人满，比赛准备开始！";
                     setTimeout(() => {
-                        startRaceCountdown(10); // 满员后等1秒，开始10秒倒计时
+                        startRaceCountdown(10); // 测试阶段 10 秒
                     }, 1000);
                 }
             }
-            setTimeout(checkAndStart, 500); // 进场0.5秒后开始检查
+            setTimeout(robotEnter, 500);
 
             function startRaceCountdown(seconds) {
                 let timeLeft = seconds;
                 statusText.innerText = `比赛进行中... 剩余 ${timeLeft}s`;
-                
                 const timer = setInterval(() => {
                     timeLeft--;
                     statusText.innerText = `比赛进行中... 剩余 ${timeLeft}s`;
-                    
                     if (timeLeft <= 0) {
                         clearInterval(timer);
                         calculateResults();
@@ -135,72 +133,75 @@
                 }, 1000);
             }
 
+            // 🚀 3. 结算并更新记录
             function calculateResults() {
-                const p = getPlayer();
-                
-                allPlayers.forEach(player => {
-                    player.speed = Math.random() * 20 + 80; 
-                });
-                allPlayers.sort((a, b) => b.speed - a.speed);
-                const myRank = allPlayers.findIndex(player => player.isMe) + 1;
-                
-                let allRewards = [0, 0, 0, 0, 0];
-                if (room.level === 'high') allRewards = [116, 110, 108, 106, 0];
-                else if (room.level === 'mid') allRewards = [51.6, 51, 50.8, 50.6, 0];
-                else allRewards = [10.16, 10.1, 10.08, 10.06, 0];
+                try {
+                    const p = getPlayer();
+                    
+                    allPlayers.forEach(player => {
+                        player.speed = Math.random() * 20 + 80; 
+                    });
+                    allPlayers.sort((a, b) => b.speed - a.speed);
+                    const myRank = allPlayers.findIndex(player => player.isMe) + 1;
+                    
+                    let allRewards = [0, 0, 0, 0, 0];
+                    if (room.level === 'high') allRewards = [116, 110, 108, 106, 0];
+                    else if (room.level === 'mid') allRewards = [51.6, 51, 50.8, 50.6, 0];
+                    else allRewards = [10.16, 10.1, 10.08, 10.06, 0];
 
-                const fifthPlaceCards = Math.random() > 0.5 ? 1 : 2;
-                let myReward = allRewards[myRank - 1];
-                let rewardText = "";
-                let basePrice = room.level === 'low' ? 10 : (room.level === 'mid' ? 50 : 100);
+                    const fifthPlaceCards = Math.random() > 0.5 ? 1 : 2;
+                    let myReward = allRewards[myRank - 1];
+                    let rewardText = "";
+                    let basePrice = room.level === 'low' ? 10 : (room.level === 'mid' ? 50 : 100);
 
-                if (myRank < 5) {
-                    p.treasures += myReward;
-                    savePlayer(p);
-                    rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
-                } else {
-                    if (!p.cards[room.level].temp) p.cards[room.level].temp = [];
-                    let now = Date.now();
-                    for(let c=0; c<fifthPlaceCards; c++) {
-                        p.cards[room.level].temp.push(now + 48 * 60 * 60 * 1000);
+                    if (myRank < 5) {
+                        p.treasures += myReward;
+                        savePlayer(p);
+                        rewardText = `${myReward.toFixed(2).replace(/\.?0+$/, '')} 秘宝`; 
+                    } else {
+                        if (!p.cards[room.level].temp) p.cards[room.level].temp = [];
+                        let now = Date.now();
+                        for(let c=0; c<fifthPlaceCards; c++) {
+                            p.cards[room.level].temp.push(now + 48 * 60 * 60 * 1000);
+                        }
+                        savePlayer(p);
+                        rewardText = `${fifthPlaceCards} 张房卡`; 
                     }
-                    savePlayer(p);
-                    rewardText = `${fifthPlaceCards} 张房卡`; 
+
+                    let fullListForHistory = allPlayers.map((player, index) => {
+                        let rStr = index < 4 ? `${allRewards[index].toFixed(2).replace(/\.?0+$/, '')} 秘宝` : `${fifthPlaceCards} 张房卡`;
+                        return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
+                    });
+                    
+                    // 🚀 更新记录
+                    completeOngoingHistory(myRank, rewardText, fullListForHistory);
+
+                    statusText.style.display = "none";
+                    document.getElementById('result-area').style.display = "block";
+
+                    let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
+                    document.getElementById('mainResultText').innerHTML = mainText;
+
+                    let taskResult = checkAndClearTask(basePrice, true);
+                    if (taskResult) {
+                        const taskMsgEl = document.getElementById('taskMsg');
+                        taskMsgEl.style.display = 'block';
+                        taskMsgEl.innerText = taskResult.msg;
+                        if (taskResult.success) taskMsgEl.style.color = '#3cc44b'; 
+                    }
+
+                    let rankListHtml = "";
+                    fullListForHistory.forEach(item => {
+                        let isMeClass = item.isMe ? 'class="me"' : '';
+                        rankListHtml += `<li ${isMeClass}>
+                            <span>第${item.rank}名: ${item.name} ${item.isMe ? '(我)' : ''}</span>
+                            <span>${item.reward}</span>
+                        </li>`;
+                    });
+                    document.getElementById('rankListText').innerHTML = rankListHtml;
+                } catch(err) {
+                    alert("结算报错：" + err.message);
                 }
-
-                let fullListForHistory = allPlayers.map((player, index) => {
-                    let rStr = index < 4 ? `${allRewards[index].toFixed(2).replace(/\.?0+$/, '')} 秘宝` : `${fifthPlaceCards} 张房卡`;
-                    return { name: player.name, rank: index + 1, reward: rStr, isMe: player.isMe };
-                });
-                
-                completeOngoingHistory(myRank, rewardText, fullListForHistory);
-
-                statusText.style.display = "none";
-                document.getElementById('result-area').style.display = "block";
-
-                let mainText = `恭喜您在本次超级竞速中获得 <span style="color:#ff5a5a;">第 ${myRank} 名</span>，<br>您的奖励为 <span style="color:#70e0e0;">${rewardText}</span>`;
-                document.getElementById('mainResultText').innerHTML = mainText;
-
-                let isHostUsedTaskCard = true; 
-                let taskResult = checkAndClearTask(basePrice, isHostUsedTaskCard);
-                
-                if (taskResult) {
-                    const taskMsgEl = document.getElementById('taskMsg');
-                    taskMsgEl.style.display = 'block';
-                    taskMsgEl.innerText = taskResult.msg;
-                    if (taskResult.success) taskMsgEl.style.color = '#3cc44b'; 
-                }
-
-                let rankListHtml = "";
-                fullListForHistory.forEach(item => {
-                    let isMeClass = item.isMe ? 'class="me"' : '';
-                    rankListHtml += `<li ${isMeClass}>
-                        <span>第${item.rank}名: ${item.name} ${item.isMe ? '(我)' : ''}</span>
-                        <span>${item.reward}</span>
-                    </li>`;
-                });
-                
-                document.getElementById('rankListText').innerHTML = rankListHtml;
             }
         }
     </script>
